@@ -4,7 +4,7 @@ Following the rules from [Rules of chess](https://en.wikipedia.org/wiki/Rules_of
 
 
 ## TODO
-- [ ] implementing game states(encoded in string).
+- [x] implementing game states(encoded in string).
 - [ ] creating list of possible moves from gamestate.
 - [ ] going to next gamestate(validating against possible moves).
 - [ ] check for checkmate.
