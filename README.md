@@ -1,2 +1,2 @@
 # leopold-chess
-chess library
+Rust chess library to build great chess games with.
