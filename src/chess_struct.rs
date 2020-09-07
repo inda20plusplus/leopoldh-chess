@@ -1,7 +1,7 @@
 #[derive(Debug)]
 
 
-pub struct PlayerType<'a> {
+pub struct king<'a> {
     pub name: &'a str,
     pub moves: Vec<(i16,i16)>,
 }
