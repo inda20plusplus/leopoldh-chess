@@ -1,6 +1,6 @@
 mod chess_struct;
 
-fn main() {
+fn test() {
     let king = chess_struct::PlayerType{
         name : "king",
         moves : vec![(1, 0),(-1, 0),(0, 1), (0,-1)]
