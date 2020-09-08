@@ -1,6 +1,7 @@
 use super::general;
-use super::strait;
+use super::diagonal;
+#[allow(dead_code)]
 pub fn find_moves(piece: &mut general::Piece, board: &general::Board) {
     piece.moves = vec![];
-    strait::find_moves(piece, &board);
+    diagonal::find_moves(piece, &board);
 }

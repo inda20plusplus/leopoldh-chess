@@ -1,10 +1,11 @@
 use std::char;
 #[allow(unused)]
-#[allow(dead_code)]
+#[derive(Clone)]
 pub struct Position {
     pub letter: i32,
     pub number: i32,
 }
+#[allow(dead_code)]
 impl Position {
     pub fn print(&self) -> String {
         let mut ret: String = char::from_u32((self.letter + 0x41) as u32)
@@ -30,6 +31,7 @@ pub struct PieceInfo {
 pub struct Board {
     pub board: Vec<Vec<i32>>,
 }
+#[allow(dead_code)]
 impl Board {
     pub fn change(&mut self, position: &Position, value: i32) {
         self.board[position.letter as usize][position.number as usize] = value;
@@ -39,9 +41,29 @@ impl Board {
     }
 }
 
-pub struct piece {
-    pub moves: Vec<general::Position>,
-    pub piece_info: general::PieceInfo,
+pub struct Piece {
+    pub moves: Vec<Position>,
+    pub piece_info: PieceInfo,
     pub name: String,
-    pub find_moves: fn(&mut self, board: &general::Board)
+    pub find_moves: fn(&mut Piece, board: &Board)
+}
+
+#[allow(dead_code)]
+impl Piece {
+    pub fn move_player(
+        &mut self,
+        board: &mut Board,
+        from: &Position,
+        to: &Position,
+    ) {
+        board.change(from, 2);
+        board.change(to, self.piece_info.color);
+    }
+    pub fn opponent(&self) -> i32{
+        if self.piece_info.color==0 {
+            return  1;
+        }else{
+            return  0;
+        }
+    }
 }
