@@ -1,9 +1,0 @@
-pub mod general;
-pub mod king;
-pub mod horse;
-pub mod pawn;
-pub mod tower;
-pub mod strait;
-pub mod diagonal;
-pub mod knight;
-pub mod queen;
