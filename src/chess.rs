@@ -1,8 +1,6 @@
-//mod moves;
 mod general;
 use general::Position;
 use general::Piece;
-//use std::mem;
 pub struct Gamestate {
     pub board: Vec<Vec<Piece>>,
     pub turn: i32,
@@ -149,17 +147,28 @@ impl Gamestate {
 
     fn private_calc_move(&mut self, position: &Position) -> Vec<Position> {
         let player = &self.board[position.letter as usize][position.number as usize];
-        if player.name() == "empty".to_string() {
-            return vec![];
-        }
         if player.color != self.turn{
             return vec![];
         }
-        let v:Vec<Position> = vec![Position{
-            letter:1,
-            number:1
-        }]; 
-        v
+        if self.private_get_piece(position).name == "king".to_string() {
+            return self.king_moves(position);
+        }
+        if self.private_get_piece(position).name == "queen".to_string() {
+            return self.queen_moves(position);
+        }
+        if self.private_get_piece(position).name == "pawn".to_string() {
+            return self.pawn_moves(position);
+        }
+        if self.private_get_piece(position).name == "tower".to_string() {
+            return self.tower_moves(position);
+        }
+        if self.private_get_piece(position).name == "knight".to_string() {
+            return self.knight_moves(position);
+        }
+        if self.private_get_piece(position).name == "horse".to_string() {
+            return self.horse_moves(position);
+        }
+        vec![]
     }
     fn private_is_possible(&mut self, from: &Position, to: &Position) -> bool{
         let possible = self.private_calc_move(&from);
@@ -182,3 +191,222 @@ impl Gamestate {
         true
     }
 }
+
+#[allow(dead_code)]
+impl Gamestate{
+    fn diagonal_moves(&mut self, pos: &Position) -> Vec<Position>{
+        let piece = &self.private_get_piece(&pos).clone();
+        let mut ret = vec![];
+        for d_number in [-1, 1].iter(){
+            for d_letter in [-1,1].iter(){
+                let mut moving = true;
+                let mut cur_position = pos.clone();
+                while moving {
+                    cur_position.number+=d_number;
+                    cur_position.letter+=d_letter;
+                    
+                    if cur_position.not_inside() {
+                        break;
+                    }
+                    let cur_piece = &self.private_get_piece(&cur_position).clone();
+                    if cur_piece.color != 2 {
+                        moving = false;
+                    }
+                    if cur_piece.color != piece.color{
+                        ret.push(cur_position.clone());
+                    }
+                }
+            }
+        }
+        ret
+    }
+    fn horse_moves(&mut self, pos: &Position) -> Vec<Position>{
+        let piece = &self.private_get_piece(&pos).clone();
+        let mut ret = vec![];
+        for delta_number in [-1, 1].iter() {
+            for delta_letter in [-1, 1].iter() {
+                {
+                    let cur_position = general::Position {
+                        number: (2*delta_number + pos.number),
+                        letter: (delta_letter + pos.letter),
+                    };
+                    if cur_position.inside() {
+                        let cur_piece = &self.private_get_piece(&cur_position).clone();
+                        if cur_piece.color != piece.color {
+                            ret.push(cur_position);
+                        }
+                    }
+                    
+                }
+                {
+                    let cur_position = general::Position {
+                        number: (delta_number + pos.number),
+                        letter: (2*delta_letter + pos.letter),
+                    };
+                    if cur_position.inside() {
+                        let cur_piece = &self.private_get_piece(&cur_position).clone();
+                        if cur_piece.color != piece.color {
+                            ret.push(cur_position);
+                        }
+                    }
+                }
+            }
+        }
+        ret
+    }
+    fn king_moves(&mut self, pos: &Position) -> Vec<Position>{
+        let piece = &self.private_get_piece(&pos).clone();
+        let mut ret = vec![];
+        for delta_number in [-1,0, 1].iter() {
+            for delta_letter in [-1,0, 1].iter() {
+                let cur_position = general::Position {
+                    number: (delta_number + pos.number),
+                    letter: (delta_letter + pos.letter),
+                };
+                if cur_position.inside() {
+                    let cur_piece = &self.private_get_piece(&cur_position).clone();
+                    if cur_piece.color != piece.color {
+                        ret.push(cur_position);
+                    }
+                }         
+            }
+        }
+        ret
+    }
+    fn pawn_moves(&mut self, pos: &Position) -> Vec<Position>{
+        if self.private_get_piece(&pos).color == 0{
+            return self.white_pawn(pos);
+        }else{
+            return self.black_pawn(pos);
+        }
+        
+    }
+    fn white_pawn(&mut self, pos: &Position)-> Vec<Position>{
+        let piece = &self.private_get_piece(&pos).clone();
+        let mut ret = vec![];
+        {
+            let cur_position = general::Position {
+                number: (pos.number),
+                letter: (pos.letter+1),
+            };
+            if cur_position.inside() {
+                let cur_piece = &self.private_get_piece(&cur_position).clone();
+                if cur_piece.color == 3 {
+                    ret.push(cur_position);
+                }
+            }    
+        }
+        {
+            let cur_position = general::Position {
+                number: (pos.number+1),
+                letter: (pos.letter+1),
+            };
+            if cur_position.inside() {
+                let cur_piece = &self.private_get_piece(&cur_position).clone();
+                if cur_piece.color != 3 && cur_piece.color != piece.color{
+                    ret.push(cur_position);
+                }
+            }    
+        }
+        {
+            let cur_position = general::Position {
+                number: (pos.number-1),
+                letter: (pos.letter+1),
+            };
+            if cur_position.inside() {
+                let cur_piece = &self.private_get_piece(&cur_position).clone();
+                if cur_piece.color != 3 && cur_piece.color != piece.color{
+                    ret.push(cur_position);
+                }
+            }    
+        }
+        ret
+    }
+    fn black_pawn(&mut self, pos: &Position)-> Vec<Position>{
+        let piece = &self.private_get_piece(&pos).clone();
+        let mut ret = vec![];
+        {
+            let cur_position = general::Position {
+                number: (pos.number),
+                letter: (pos.letter-1),
+            };
+            if cur_position.inside() {
+                let cur_piece = &self.private_get_piece(&cur_position).clone();
+                if cur_piece.color == 3 {
+                    ret.push(cur_position);
+                }
+            }    
+        }
+        {
+            let cur_position = general::Position {
+                number: (pos.number+1),
+                letter: (pos.letter-1),
+            };
+            if cur_position.inside() {
+                let cur_piece = &self.private_get_piece(&cur_position).clone();
+                if cur_piece.color != 3 && cur_piece.color != piece.color{
+                    ret.push(cur_position);
+                }
+            }    
+        }
+        {
+            let cur_position = general::Position {
+                number: (pos.number-1),
+                letter: (pos.letter-1),
+            };
+            if cur_position.inside() {
+                let cur_piece = &self.private_get_piece(&cur_position).clone();
+                if cur_piece.color != 3 && cur_piece.color != piece.color{
+                    ret.push(cur_position);
+                }
+            }    
+        }
+        ret
+    }
+    fn straight_moves(&mut self, pos: &Position) -> Vec<Position>{
+        let piece = &self.private_get_piece(&pos).clone();
+        let mut ret = vec![];
+        for d_number in [-1, 1,0].iter(){
+            for d_letter in [-1,1,0].iter(){
+                if d_number*d_letter != 0{
+                    continue;
+                }
+                let mut moving = true;
+                let mut cur_position = pos.clone();
+                while moving {
+                    cur_position.number+=d_number;
+                    cur_position.letter+=d_letter;
+                    
+                    if cur_position.not_inside() {
+                        break;
+                    }
+                    let cur_piece = &self.private_get_piece(&cur_position).clone();
+                    if cur_piece.color != 2 {
+                        moving = false;
+                    }
+                    if cur_piece.color != piece.color{
+                        ret.push(cur_position.clone());
+                    }
+                }
+            }
+        }
+        ret
+    }
+    fn queen_moves(&mut self, pos: &Position) -> Vec<Position>{
+        let mut ret = vec![];
+        ret.extend(self.diagonal_moves(pos).iter().copied());
+        ret.extend(self.straight_moves(pos).iter().copied());
+        ret
+    }
+    fn knight_moves(&mut self, pos: &Position) -> Vec<Position>{
+        let mut ret = vec![];
+        ret.extend(self.diagonal_moves(pos).iter().copied());
+        ret
+    }
+    fn tower_moves(&mut self, pos: &Position) -> Vec<Position>{
+        let mut ret = vec![];
+        ret.extend(self.straight_moves(pos).iter().copied());
+        ret
+    }
+}
+
