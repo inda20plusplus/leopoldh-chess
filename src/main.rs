@@ -7,4 +7,6 @@ fn main(){
     for i in moves.iter(){
         println!("{}->{:?}", i.0, i.1);
     }
+    let a = game.move_piece(0, 1, 2, 0);
+    println!("{:?}", a);
 }

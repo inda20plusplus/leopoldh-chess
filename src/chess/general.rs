@@ -21,7 +21,7 @@ impl Position {
         ((self.number < 0) || (self.letter < 0)) || ((self.number > 7) || (self.letter > 7))
     }
     pub fn inside(&self) -> bool {
-        !((self.number < 0) || (self.letter < 0)) || ((self.number > 7) || (self.letter > 7))
+        !(((self.number < 0) || (self.letter < 0)) || ((self.number > 7) || (self.letter > 7)))
     }
     pub fn same(&self, cmp: &Position) -> bool {
         if self.not_inside() || cmp.not_inside() {

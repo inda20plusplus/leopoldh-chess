@@ -55,7 +55,13 @@ impl Gamestate {
         }
         Gamestate::private_get_piece(self, &pos).color()
     }
-
+    pub fn moved(&mut self, letter: i32, number: i32) -> bool {
+        let pos = Position { letter, number };
+        if pos.not_inside() {
+            panic!("bad position");
+        }
+        Gamestate::private_get_piece(self, &pos).moved
+    }
     pub fn name(&mut self, letter: i32, number: i32) -> String {
         let pos = Position { letter, number };
         if pos.not_inside() {
@@ -90,17 +96,17 @@ impl Gamestate {
         let mut ret = vec![];
         for i in 0..8 {
             for j in 0..8 {
-                let full_name = self.board[i][j].full_name();
+                let position = Position{
+                    letter: i as i32,
+                    number: j as i32
+                };
                 let possible = self.private_calc_move(
-                    &Position{
-                        letter: i as i32,
-                        number: j as i32
-                    }
+                    &position
                 );
                 if possible.len() == 0{
                     continue;
                 }
-                let mut s:(String, Vec<String>) = (full_name, vec![]);
+                let mut s:(String, Vec<String>) = (position.print(), vec![]);
                 for p in possible{
                     s.1.push(p.print());
                 }
@@ -125,7 +131,7 @@ impl Gamestate {
         if to.not_inside(){
             panic!("bad position")
         }
-        self.private_move_piece(
+        if !self.private_move_piece(
             Position {
                 letter: from_letter,
                 number: from_number,
@@ -133,8 +139,16 @@ impl Gamestate {
             Position {
                 letter: to_letter,
                 number: to_number,
-            },
-        )
+            }
+        ){
+            return false;
+        }
+        if self.turn == 0 {
+            self.turn = 1;
+        }else{
+            self.turn = 0;
+        }
+        true
     }
 }
 
@@ -173,8 +187,8 @@ impl Gamestate {
     fn private_is_possible(&mut self, from: &Position, to: &Position) -> bool{
         let possible = self.private_calc_move(&from);
         for i in possible.iter(){
-            print!("{},{}", i.print(), to.print());
             if to.same(i){
+                println!("debug");
                 return true;
             }
         }
@@ -290,35 +304,48 @@ impl Gamestate{
                 letter: (pos.letter+1),
             };
             if cur_position.inside() {
+                
                 let cur_piece = &self.private_get_piece(&cur_position).clone();
-                if cur_piece.color == 3 {
+                if cur_piece.color == 2 {
+                    ret.push(cur_position);
+                }
+            }    
+        }
+        if piece.moved == false{
+            let cur_position = general::Position {
+                number: (pos.number),
+                letter: (pos.letter+2),
+            };
+            if cur_position.inside() {
+                let cur_piece = &self.private_get_piece(&cur_position).clone();
+                if cur_piece.color == 2 {
                     ret.push(cur_position);
                 }
             }    
         }
         {
-            let cur_position = general::Position {
-                number: (pos.number+1),
-                letter: (pos.letter+1),
-            };
-            if cur_position.inside() {
-                let cur_piece = &self.private_get_piece(&cur_position).clone();
-                if cur_piece.color != 3 && cur_piece.color != piece.color{
-                    ret.push(cur_position);
-                }
-            }    
+           let cur_position = general::Position {
+               number: (pos.number+1),
+               letter: (pos.letter+1),
+           };
+           if cur_position.inside() {
+               let cur_piece = &self.private_get_piece(&cur_position).clone();
+               if cur_piece.color != 2 && cur_piece.color != piece.color{
+                   ret.push(cur_position);
+               }
+           }    
         }
         {
-            let cur_position = general::Position {
-                number: (pos.number-1),
-                letter: (pos.letter+1),
-            };
-            if cur_position.inside() {
-                let cur_piece = &self.private_get_piece(&cur_position).clone();
-                if cur_piece.color != 3 && cur_piece.color != piece.color{
-                    ret.push(cur_position);
-                }
-            }    
+           let cur_position = general::Position {
+               number: (pos.number-1),
+               letter: (pos.letter+1),
+           };
+           if cur_position.inside() {
+               let cur_piece = &self.private_get_piece(&cur_position).clone();
+               if cur_piece.color != 2 && cur_piece.color != piece.color{
+                   ret.push(cur_position);
+               }
+           }    
         }
         ret
     }
@@ -332,7 +359,19 @@ impl Gamestate{
             };
             if cur_position.inside() {
                 let cur_piece = &self.private_get_piece(&cur_position).clone();
-                if cur_piece.color == 3 {
+                if cur_piece.color == 2 {
+                    ret.push(cur_position);
+                }
+            }    
+        }
+        if !piece.moved{
+            let cur_position = general::Position {
+                number: (pos.number),
+                letter: (pos.letter-2),
+            };
+            if cur_position.inside() {
+                let cur_piece = &self.private_get_piece(&cur_position).clone();
+                if cur_piece.color == 2 {
                     ret.push(cur_position);
                 }
             }    
@@ -344,7 +383,7 @@ impl Gamestate{
             };
             if cur_position.inside() {
                 let cur_piece = &self.private_get_piece(&cur_position).clone();
-                if cur_piece.color != 3 && cur_piece.color != piece.color{
+                if cur_piece.color != 2 && cur_piece.color != piece.color{
                     ret.push(cur_position);
                 }
             }    
@@ -356,7 +395,7 @@ impl Gamestate{
             };
             if cur_position.inside() {
                 let cur_piece = &self.private_get_piece(&cur_position).clone();
-                if cur_piece.color != 3 && cur_piece.color != piece.color{
+                if cur_piece.color != 2  && cur_piece.color != piece.color{
                     ret.push(cur_position);
                 }
             }    
