@@ -1,6 +1,49 @@
 mod general;
 use general::Position;
 use general::Piece;
+pub struct Game{
+    game: Vec<Gamestate>,
+    pub current: Gamestate,
+    turn: i32
+}
+impl Game {
+    pub fn new() -> Game{   
+        let mut ret = Game{
+            game: vec![Gamestate::new()],
+            current: Gamestate::new(),
+            turn: 1,
+        };
+        ret.game[0].start();
+        ret.current = ret.game[0].clone();
+        ret
+    }
+    pub fn end(self){}
+    pub fn possible_moves(&mut self, position: (i32,i32)) -> Vec<(i32, i32)>{
+        let ret = self.current.possible_moves(position);
+        ret
+    }
+    pub fn undo(&mut self) -> bool{
+        if self.turn < 2 {
+            return false;
+        }
+        self.game.pop();
+        self.turn= self.game.len() as i32;
+        self.current = self.game[self.game.len()-1];
+        true
+    }
+    pub fn do_move(&mut self, from: (i32, i32), to: (i32, i32)) -> bool{
+        if self.current.move_piece(from, to){
+            self.game.push(self.current.clone());
+            if self.current.check() == true {
+                self.undo();
+                return false;
+            }
+            return true;
+        }
+        false
+    }
+}
+#[derive(Clone)]
 pub struct Gamestate {
     pub board: Vec<Vec<Piece>>,
     pub turn: i32,
@@ -11,6 +54,13 @@ impl Gamestate {
         Gamestate {
             board: vec![vec![Piece::new("empty".to_string(), 2); 8]; 8],
             turn: 0,
+        }
+    }
+    pub fn opponent(&self) -> i32{
+        if self.turn == 0 {
+            return 1;
+        }else{
+            return 0;
         }
     }
     pub fn start(&mut self) -> () {
@@ -77,77 +127,40 @@ impl Gamestate {
         Gamestate::private_get_piece(self, &pos).full_name()
     }
 
-    pub fn possible_moves(&mut self, letter: i32, number: i32) -> Vec<String> {
-        let position = Position{
-            letter: letter,
-            number: number
-        };
+    pub fn possible_moves(&mut self, position: (i32, i32)) -> Vec<(i32, i32)> {
+        let position : Position = Position::new(position);
         if position.not_inside(){
             panic!("bad position");
         }
-        let possible = self.private_calc_move(&position);
-        let mut ret:Vec<String> = vec![];
+        let possible : Vec<Position>= self.private_calc_move(&position);
+        let mut ret:Vec<(i32, i32)> = vec![];
         for p in possible{
-            ret.push(p.print());
+            ret.push(p.val());
         }
         ret
     }
-    pub fn all_possible_moves(&mut self) -> Vec<(String, Vec<String>)> {
-        let mut ret = vec![];
+    pub fn check(&mut self) -> bool {
         for i in 0..8 {
             for j in 0..8 {
-                let position = Position{
-                    letter: i as i32,
-                    number: j as i32
+                let position = Position::new((i as i32, j as i32));
+                if self.private_reach_king(&position) {
+                    return true;
                 };
-                let possible = self.private_calc_move(
-                    &position
-                );
-                if possible.len() == 0{
-                    continue;
-                }
-                let mut s:(String, Vec<String>) = (position.print(), vec![]);
-                for p in possible{
-                    s.1.push(p.print());
-                }
-                ret.push(s);
             }
         }
-        ret
+        false
     }
 
-    pub fn move_piece(&mut self, from_letter: i32, from_number: i32, to_letter: i32, to_number: i32)->bool {
-        let from = Position {
-            letter: from_letter,
-            number: from_number,
-        };
-        let to = Position {
-            letter: to_letter,
-            number: to_number,
-        };
-        if from.not_inside(){
+    pub fn move_piece(&mut self, from: (i32, i32), to: (i32,i32))->bool {
+        let from = Position::new(from);
+        let to = Position::new(to);
+        if from.not_inside() || to.not_inside(){
             panic!("bad position")
         }
-        if to.not_inside(){
-            panic!("bad position")
-        }
-        if !self.private_move_piece(
-            Position {
-                letter: from_letter,
-                number: from_number,
-            },
-            Position {
-                letter: to_letter,
-                number: to_number,
-            }
-        ){
+        if !self.private_move_piece(from, to){
             return false;
         }
-        if self.turn == 0 {
-            self.turn = 1;
-        }else{
-            self.turn = 0;
-        }
+        self.turn = self.opponent();
         true
     }
 }
@@ -156,9 +169,16 @@ impl Gamestate {
     fn private_get_piece(&mut self, pos: &Position) -> &mut Piece {
         &mut self.board[pos.letter as usize][pos.number as usize]
     }
-
+    fn private_reach_king(&self, position: &Position) -> bool{
+        let moves = self.private_calc_move(&position);
+        for i in moves.iter(){
+            if self.private_get_piece(&i).name() == "king".to_owned() {
+                return true;
+            }
+        }
+        false
+    }
     
-
     fn private_calc_move(&mut self, position: &Position) -> Vec<Position> {
         let player = &self.board[position.letter as usize][position.number as usize];
         if player.color != self.turn{
@@ -182,13 +202,12 @@ impl Gamestate {
         if self.private_get_piece(position).name == "horse".to_string() {
             return self.horse_moves(position);
         }
-        vec![]
+        panic!("bad piece");
     }
     fn private_is_possible(&mut self, from: &Position, to: &Position) -> bool{
         let possible = self.private_calc_move(&from);
         for i in possible.iter(){
             if to.same(i){
-                println!("debug");
                 return true;
             }
         }
@@ -199,7 +218,7 @@ impl Gamestate {
         if !self.private_is_possible( &from, &to){
             return false;
         }
-        let cp = self.private_get_piece(&from).clone();
+        let mut cp = self.private_get_piece(&from).clone();
         self.private_get_piece(&to).mv(cp);
         self.private_get_piece(&from).clear();
         true

@@ -1,4 +1,3 @@
-use std::char;
 #[allow(unused)]
 #[derive(Clone, Copy)]
 pub struct Position {
@@ -7,15 +6,17 @@ pub struct Position {
 }
 #[allow(dead_code)]
 impl Position {
-    pub fn print(&self) -> String {
+    pub fn val(&self) -> (i32, i32) {
         if self.not_inside() {
             panic!("bad position")
         }
-        let mut ret: String = char::from_u32((self.letter + 0x41) as u32)
-            .unwrap()
-            .to_string();
-        ret.push_str(&(self.number + 1).to_string());
-        ret
+        (self.letter, self.number)
+    }
+    pub fn new(position: (i32, i32)) -> Position {
+        Position{
+            letter: position.0,
+            number: position.1
+        }
     }
     pub fn not_inside(&self) -> bool {
         ((self.number < 0) || (self.letter < 0)) || ((self.number > 7) || (self.letter > 7))
