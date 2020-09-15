@@ -1,14 +1,6 @@
 
 
-#[allow(unused)]
-pub struct OneMove{
-    type_of_move: String,
-    from: Position,
-    to: Position,
-    optional_from:Position,
-    optional_to:Position,
-    optional_clear:Position,
-}
+
 #[derive(Clone, Copy)]
 pub struct Position {
     pub letter: i32,

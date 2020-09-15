@@ -1,7 +1,6 @@
 mod general;
 use general::Position;
 use general::Piece;
-use general::OneMove;
 pub struct Game{
     game: Vec<Gamestate>,
     current: Gamestate,
@@ -19,7 +18,56 @@ impl Game {
         ret.current = ret.game[0].clone();
         ret
     }
-    pub fn end(self){}
+    pub fn print(&mut self) -> Vec<Vec<String>>{
+        let mut ret: Vec<Vec<String>> = vec![vec!["_".to_owned(); 8];8];
+        for i in 0..8 {
+            for j in 0..8 {
+                let position = Position::new((i as i32, j as i32));
+                let piece = self.current.private_get_piece(&position);
+                if piece.color == 0{
+                    if piece.name == "king".to_string() {
+                        ret[i][j] = "♔".to_owned();
+                    }
+                    if piece.name == "queen".to_string() {
+                        ret[i][j] = "♕".to_owned();
+                    }
+                    if piece.name == "pawn".to_string() {
+                        ret[i][j] = "♙".to_owned();
+                    }
+                    if piece.name == "rook".to_string() {
+                        ret[i][j] = "♖".to_owned();
+                    }
+                    if piece.name == "bishop".to_string() {
+                        ret[i][j] = "♗".to_owned();
+                    }
+                    if piece.name == "knight".to_string() {
+                        ret[i][j] = "♘".to_owned();
+                    }
+                }
+                if piece.color == 1{
+                    if piece.name == "king".to_string() {
+                        ret[i][j] = "♚".to_owned();
+                    }
+                    if piece.name == "queen".to_string() {
+                        ret[i][j] = "♛".to_owned();
+                    }
+                    if piece.name == "pawn".to_string() {
+                        ret[i][j] = "♟".to_owned();
+                    }
+                    if piece.name == "rook".to_string() {
+                        ret[i][j] = "♜".to_owned();
+                    }
+                    if piece.name == "bishop".to_string() {
+                        ret[i][j] = "♝".to_owned();
+                    }
+                    if piece.name == "knight".to_string() {
+                        ret[i][j] = "♞".to_owned();
+                    }
+                }
+            }
+        }
+        ret
+    }
     pub fn possible_moves(&mut self, position: (i32,i32)) -> Vec<(i32, i32)>{
         let ret = self.current.possible_moves(position);
         ret
@@ -64,6 +112,7 @@ pub struct Gamestate {
     pub board: Vec<Vec<Piece>>,
     pub turn: i32,
     pub enpassant: (bool, Position),
+    pub check: bool
 }
 #[allow(dead_code)]
 impl Gamestate {
@@ -72,6 +121,7 @@ impl Gamestate {
             board: vec![vec![Piece::new("empty".to_string(), 2); 8]; 8],
             turn: 0,
             enpassant: (false,Position::new((0,0))),
+            check: false
         }
     }
     pub fn opponent(&self) -> i32{
@@ -82,22 +132,22 @@ impl Gamestate {
         }
     }
     pub fn start(&mut self) -> () {
-        self.board[0][0] = Piece::new("tower".to_string(), 0);
-        self.board[0][1] = Piece::new("horse".to_string(), 0);
-        self.board[0][2] = Piece::new("knight".to_string(), 0);
+        self.board[0][0] = Piece::new("rook".to_string(), 0);
+        self.board[0][1] = Piece::new("knight".to_string(), 0);
+        self.board[0][2] = Piece::new("bishop".to_string(), 0);
         self.board[0][3] = Piece::new("queen".to_string(), 0);
         self.board[0][4] = Piece::new("king".to_string(), 0);
-        self.board[0][5] = Piece::new("knight".to_string(), 0);
-        self.board[0][6] = Piece::new("horse".to_string(), 0);
-        self.board[0][7] = Piece::new("tower".to_string(), 0);
-        self.board[7][0] = Piece::new("tower".to_string(), 1);
-        self.board[7][1] = Piece::new("horse".to_string(), 1);
-        self.board[7][2] = Piece::new("knight".to_string(), 1);
+        self.board[0][5] = Piece::new("bishop".to_string(), 0);
+        self.board[0][6] = Piece::new("knight".to_string(), 0);
+        self.board[0][7] = Piece::new("rook".to_string(), 0);
+        self.board[7][0] = Piece::new("rook".to_string(), 1);
+        self.board[7][1] = Piece::new("knight".to_string(), 1);
+        self.board[7][2] = Piece::new("bishop".to_string(), 1);
         self.board[7][3] = Piece::new("queen".to_string(), 1);
         self.board[7][4] = Piece::new("king".to_string(), 1);
-        self.board[7][5] = Piece::new("knight".to_string(), 1);
-        self.board[7][6] = Piece::new("horse".to_string(), 1);
-        self.board[7][7] = Piece::new("tower".to_string(), 1);
+        self.board[7][5] = Piece::new("bishop".to_string(), 1);
+        self.board[7][6] = Piece::new("knight".to_string(), 1);
+        self.board[7][7] = Piece::new("rook".to_string(), 1);
         self.board[1][0] = Piece::new("pawn".to_string(), 0);
         self.board[1][1] = Piece::new("pawn".to_string(), 0);
         self.board[1][2] = Piece::new("pawn".to_string(), 0);
@@ -168,32 +218,32 @@ impl Gamestate {
         }
         false
     }
-    pub fn promote(&mut self, position: (i32, i32), transform: String)-> bool{
-        if self.can_promote(position) && self.valid_type(&transform){
-            let mut piece = self.private_get_piece(&Position::new(position));
-            piece.name = transform;
-            return true;
-        }
-        false
-    }
+    //pub fn promote(&mut self, position: (i32, i32), transform: String)-> bool{
+    //    if self.can_promote(position) && self.valid_type(&transform){
+    //        let mut piece = self.private_get_piece(&Position::new(position));
+    //        piece.name = transform;
+    //        return true;
+    //    }
+    //    false
+    //}
 
-    pub fn can_promote(&mut self, position: (i32, i32))-> bool{
-        let mut is_pawn = false;
-        {
-            let piece = self.private_get_piece(&Position::new(position));
-            is_pawn = piece.name== "pawn".to_string();
-        }
-        if self.turn == 0{
-            if position.0 == 7 && is_pawn{
-                return true;
-            }
-        }else{
-            if position.0 == 0 && is_pawn{
-                return true;
-            }
-        }
-        return false;
-    }
+    //pub fn can_promote(&mut self, position: (i32, i32))-> bool{
+    //    let mut is_pawn = false;
+    //    {
+    //        let piece = self.private_get_piece(&Position::new(position));
+    //        is_pawn = piece.name== "pawn".to_string();
+    //    }
+    //    if self.turn == 0{
+    //        if position.0 == 7 && is_pawn{
+    //            return true;
+    //        }
+    //    }else{
+    //        if position.0 == 0 && is_pawn{
+    //            return true;
+    //        }
+    //    }
+    //    return false;
+    //}
     pub fn move_piece(&mut self, from: (i32, i32), to: (i32,i32))->bool {
         let from = Position::new(from);
         let to = Position::new(to);
@@ -209,15 +259,15 @@ impl Gamestate {
 }
 
 impl Gamestate {
-    fn valid_type(&mut self, test: &String) -> bool{
-        let valid = vec!["king".to_string(),"queen".to_string(),"pawn".to_string(),"tower".to_string(),"knight".to_string(),"horse".to_string()];
-        for i in valid.iter(){
-            if i == test{
-                return true;
-            }
-        }
-        false
-    }
+    //fn valid_type(&mut self, test: &String) -> bool{
+    //    let valid = vec!["king".to_string(),"queen".to_string(),"pawn".to_string(),"rook".to_string(),"bishop".to_string(),"knight".to_string()];
+    //    for i in valid.iter(){
+    //        if i == test{
+    //            return true;
+    //        }
+    //    }
+    //    false
+    //}
     fn private_get_piece(&mut self, position: &Position) -> &mut Piece {
         &mut self.board[position.letter as usize][position.number as usize]
     }
@@ -243,20 +293,20 @@ impl Gamestate {
             return self.queen_moves(position);
         }
         if self.private_get_piece(position).name == "pawn".to_string() {
-            let mut ret = self.pawn_moves(position);
-            if self.can_promote(position.val()){
-                ret.push(position.clone());
-            }
+            let ret = self.pawn_moves(position);
+            //if self.can_promote(position.val()){
+            //    ret.push(position.clone());
+            //}
             return ret;
         }
-        if self.private_get_piece(position).name == "tower".to_string() {
-            return self.tower_moves(position);
+        if self.private_get_piece(position).name == "rook".to_string() {
+            return self.rook_moves(position);
+        }
+        if self.private_get_piece(position).name == "bishop".to_string() {
+            return self.bishop_moves(position);
         }
         if self.private_get_piece(position).name == "knight".to_string() {
             return self.knight_moves(position);
-        }
-        if self.private_get_piece(position).name == "horse".to_string() {
-            return self.horse_moves(position);
         }
         panic!("bad piece");
     }
@@ -288,33 +338,8 @@ impl Gamestate {
 
 #[allow(dead_code)]
 impl Gamestate{
-    fn diagonal_moves(&mut self, position: &Position) -> Vec<Position>{
-        let piece = &self.private_get_piece(&position).clone();
-        let mut ret = vec![];
-        for d_number in [-1, 1].iter(){
-            for d_letter in [-1,1].iter(){
-                let mut moving = true;
-                let mut cur_position = position.clone();
-                while moving {
-                    cur_position.number+=d_number;
-                    cur_position.letter+=d_letter;
-                    
-                    if cur_position.not_inside() {
-                        break;
-                    }
-                    let cur_piece = &self.private_get_piece(&cur_position).clone();
-                    if cur_piece.color != 2 {
-                        moving = false;
-                    }
-                    if cur_piece.color != piece.color{
-                        ret.push(cur_position.clone());
-                    }
-                }
-            }
-        }
-        ret
-    }
-    fn horse_moves(&mut self, position: &Position) -> Vec<Position>{
+    
+    fn knight_moves(&mut self, position: &Position) -> Vec<Position>{
         let piece = &self.private_get_piece(&position).clone();
         let mut ret = vec![];
         for delta_number in [-1, 1].iter() {
@@ -369,176 +394,91 @@ impl Gamestate{
     }
     fn pawn_moves(&mut self, position: &Position) -> Vec<Position>{
         if self.private_get_piece(&position).color == 0{
-            return self.white_pawn(position);
+            return self.pawn(position, 1);
         }else{
-            return self.black_pawn(position);
+            return self.pawn(position, -1);
         }
         
     }
-    fn white_pawn(&mut self, position: &Position)-> Vec<Position>{
-        let piece = &self.private_get_piece(&position).clone();
+    fn pawn(&mut self, position: &Position, dir: i32)-> Vec<Position>{
+        let piece = self.private_get_piece(position).clone();
         let mut ret = vec![];
-        {
-            let cur_position = general::Position {
+        for i in 1..3{
+            let cur_position = Position {
                 number: (position.number),
-                letter: (position.letter+1),
+                letter: (position.letter+i*dir),
             };
             if cur_position.inside() {
-                
-                let cur_piece = &self.private_get_piece(&cur_position).clone();
-                if cur_piece.color == 2 {
+                if self.private_get_piece(&cur_position).color == 2 {
                     ret.push(cur_position);
                 }
             }    
         }
-        if piece.moved == false{
-            let cur_position = general::Position {
-                number: (position.number),
-                letter: (position.letter+2),
-            };
+        for i in [-1, 1].iter(){
+            let cur_position = Position::new((position.number+i,position.letter+dir));
             if cur_position.inside() {
-                let cur_piece = &self.private_get_piece(&cur_position).clone();
-                if cur_piece.color == 2 {
+                let cur_piece = self.private_get_piece(&cur_position).clone();
+                if cur_piece.color == piece.opponent(){
                     ret.push(cur_position);
                 }
-            }    
-        }
-        {
-           let cur_position = general::Position {
-               number: (position.number+1),
-               letter: (position.letter+1),
-           };
-           if cur_position.inside() {
-               let cur_piece = &self.private_get_piece(&cur_position).clone();
-               if cur_piece.color != 2 && cur_piece.color != piece.color{
-                   ret.push(cur_position);
-               }
-           }    
-        }
-        {
-           let cur_position = general::Position {
-               number: (position.number-1),
-               letter: (position.letter+1),
-           };
-           if cur_position.inside() {
-               let cur_piece = &self.private_get_piece(&cur_position).clone();
-               if cur_piece.color != 2 && cur_piece.color != piece.color{
-                   ret.push(cur_position);
-               }
-           }    
-        }
-        if self.enpassant.0
-        {
-            let cur_position = general::Position {
-                number: (position.number+1),
-                letter: (position.letter),
-            };
-            
-            if cur_position.inside() {
-                let cur_piece = &self.private_get_piece(&cur_position).clone();
-                if cur_piece.color != 2 && cur_piece.color != piece.color{
-                    ret.push(cur_position);
+                if self.enpassant.0 == true{
+                    if self.enpassant.1.same(&Position::new((position.number+i,position.letter))){
+                        ret.push(cur_position);
+                    }
                 }
             }    
         }
         ret
     }
-    fn black_pawn(&mut self, position: &Position)-> Vec<Position>{
+    
+    fn moves(&mut self, position: &Position, dir: (i32, i32), moving: bool) -> Vec<Position>{
         let piece = &self.private_get_piece(&position).clone();
         let mut ret = vec![];
-        {
-            let cur_position = general::Position {
-                number: (position.number),
-                letter: (position.letter-1),
-            };
-            if cur_position.inside() {
-                let cur_piece = &self.private_get_piece(&cur_position).clone();
-                if cur_piece.color == 2 {
-                    ret.push(cur_position);
-                }
-            }    
-        }
-        if !piece.moved{
-            let cur_position = general::Position {
-                number: (position.number),
-                letter: (position.letter-2),
-            };
-            if cur_position.inside() {
-                let cur_piece = &self.private_get_piece(&cur_position).clone();
-                if cur_piece.color == 2 {
-                    ret.push(cur_position);
-                }
-            }    
-        }
-        {
-            let cur_position = general::Position {
-                number: (position.number+1),
-                letter: (position.letter-1),
-            };
-            if cur_position.inside() {
-                let cur_piece = &self.private_get_piece(&cur_position).clone();
-                if cur_piece.color != 2 && cur_piece.color != piece.color{
-                    ret.push(cur_position);
-                }
-            }    
-        }
-        {
-            let cur_position = general::Position {
-                number: (position.number-1),
-                letter: (position.letter-1),
-            };
-            if cur_position.inside() {
-                let cur_piece = &self.private_get_piece(&cur_position).clone();
-                if cur_piece.color != 2  && cur_piece.color != piece.color{
-                    ret.push(cur_position);
-                }
-            }    
-        }
-        ret
-    }
-    fn straight_moves(&mut self, position: &Position) -> Vec<Position>{
-        let piece = &self.private_get_piece(&position).clone();
-        let mut ret = vec![];
-        for d_number in [-1, 1,0].iter(){
-            for d_letter in [-1,1,0].iter(){
-                if d_number*d_letter != 0{
-                    continue;
-                }
-                let mut moving = true;
-                let mut cur_position = position.clone();
-                while moving {
-                    cur_position.number+=d_number;
-                    cur_position.letter+=d_letter;
-                    
-                    if cur_position.not_inside() {
-                        break;
-                    }
-                    let cur_piece = &self.private_get_piece(&cur_position).clone();
-                    if cur_piece.color != 2 {
-                        moving = false;
-                    }
-                    if cur_piece.color != piece.color{
-                        ret.push(cur_position.clone());
-                    }
-                }
+        let mut cur_position = position.clone();
+        while moving {
+            cur_position.number+=dir.0;
+            cur_position.letter+=dir.1;
+            if cur_position.not_inside() {
+                break;
+            }
+            let cur_piece = &self.private_get_piece(&cur_position).clone();
+            if cur_piece.color != 2 {
+                moving = false;
+            }
+            if cur_piece.color == piece.opponent(){
+                ret.push(cur_position.clone());
             }
         }
         ret
     }
     fn queen_moves(&mut self, position: &Position) -> Vec<Position>{
         let mut ret = vec![];
-        ret.extend(self.diagonal_moves(position).iter().copied());
-        ret.extend(self.straight_moves(position).iter().copied());
+        for i in [-1, 0, 1].iter(){
+            for j in [-1, 0, 1].iter(){
+                ret.extend(self.moves(position, (*i, *j), true).iter().copied());
+            }
+        }
         ret
     }
-    fn knight_moves(&mut self, position: &Position) -> Vec<Position>{
+    fn bishop_moves(&mut self, position: &Position) -> Vec<Position>{
         let mut ret = vec![];
-        ret.extend(self.diagonal_moves(position).iter().copied());
+        for i in [-1, 1].iter(){
+            for j in [-1, 1].iter(){
+                ret.extend(self.moves(position, (*i, *j), true).iter().copied());
+            }
+        }
         ret
     }
-    fn tower_moves(&mut self, position: &Position) -> Vec<Position>{
+    fn rook_moves(&mut self, position: &Position) -> Vec<Position>{
         let mut ret = vec![];
-        ret.extend(self.straight_moves(position).iter().copied());
+        for i in [-1, 0, 1].iter(){
+            for j in [-1, 0, 1].iter(){
+                if i*j == 0{
+                    continue;
+                }
+                ret.extend(self.moves(position, (*i, *j)).iter().copied());
+            }
+        }
         ret
     }
 }
