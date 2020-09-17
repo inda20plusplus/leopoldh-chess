@@ -3,8 +3,8 @@ mod chess;
 fn main() {
     let mut game = chess::Game::new();
     game.print();
-    game.move_piece((0, 1), (2, 0));
+    println!("{}",game.small_castling());
     game.print();
-    game.undo();
+    println!("{}",game.large_castling());
     game.print();
 }

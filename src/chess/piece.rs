@@ -13,7 +13,7 @@ impl Piece {
         self.color
     }
     pub fn moved(&self) -> bool {
-        self.moved()
+        self.moved
     }
     pub fn change_name(&mut self, new: String)-> (){
         self.name = new;
@@ -37,15 +37,14 @@ impl Piece {
             moved: false,
         }
     }
-    pub fn mv(&mut self, new: &Piece) {
+    pub fn mv(&mut self, new: Piece) {
         self.name = new.name;
         self.color = new.color;
         self.moved = true; 
-        new.clear();
     }
     pub fn promote(&mut self, new: String) -> bool{
         if self.name == "pawn".to_owned(){
-            self.name = new;
+            self.name =  new;
             return true;
         }
         false

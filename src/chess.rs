@@ -53,65 +53,46 @@ impl Game {
         return  false;
     }
     pub fn promote(&mut self, position: (i32, i32), to: String) -> bool {
-        let mut round = self.current();
-        let mut piece = round.get_piece(&Position::new(position));
-        if round.check{
-            return false;
-        }
-        match to.as_str() {
-            "queen" | "bishop" | "knight" | "rook" => 
-                match piece.color() {
-                    0 | 1 if position.0 == 7 || position.0 == 0 => {
-                        if piece.promote(to){
-                            self.game.push(round);
-                            return true;
-                        }
-                    } ,
-                    _ => return false,
-                },
-            _ => return false,    
+        let mut current = self.current();
+        if current.promote(Position::new(position), to){
+            self.game.push(current);
+            return true;
         }
         false
     }
     pub fn small_castling(&mut self) -> bool{
-        if !self.small_castling_available(){
-            return false;
+        let mut current = self.current();
+        if current.small_castling(){
+            self.game.push(current);
+            return true;
         }
         false
+    }
+    pub fn small_castling_available(&mut self) -> bool{
+        let mut current = self.current();
+        current.small_castling_available()
+    }
+    pub fn large_castling_available(&mut self) -> bool{
+        let mut current = self.current();
+        current.large_castling_available()
     }
     pub fn large_castling(&mut self) -> bool{
-        if !self.large_castling_available(){
-            return false;
-        }
-        false
-    }
-    fn valid_move(&mut self) -> bool {
-        if self.large_castling_available(){
+        let mut current = self.current();
+        if current.large_castling(){
+            self.game.push(current);
             return true;
-        }
-        if self.small_castling_available(){
-            return true;
-        }
-        for i in 0..8 {
-            if self.promote((i as i32, 0), "queen".to_string()){
-                self.undo();
-                return true;
-            }
-            for j in 0..8 {
-                if self.current().calc_moves(&Position::new((i, j))).len() != 0{
-                    true;
-                }
-            }
         }
         false
     }
 }
 //debug and information
+#[allow(dead_code)]
 impl Game {
     pub fn print(&mut self) -> (){
+        let mut current = self.current();
         for i in 0..8 {
             for j in 0..8 {
-                let piece = self.current().get_piece(&Position::new((i as i32, j as i32)));
+                let piece = current.get_piece(&Position::new((i as i32, j as i32)));
                 print!(" {} ", icon::icon(piece.color(), piece.name()));
             }
             println!("");
@@ -121,19 +102,11 @@ impl Game {
         let ret = self.current().possible_moves(&Position::new(position));
         ret
     }
-    pub fn small_castling_available(&mut self) -> bool{
-        false
-    }
-    pub fn large_castling_available(&mut self) -> bool{
-        false
-    }
     pub fn stalemate(&mut self) -> bool {
-        if self.current().check() == false && self.valid_move() == false {
-            return true;
-        }
-        false
+        self.current().stalemate()
     }
-    pub fn check(&self)->bool{
-        self.current.check
+    pub fn check(&mut self)->bool{
+        let mut current = self.current();
+        current.check()
     }
 }

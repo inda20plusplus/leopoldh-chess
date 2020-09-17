@@ -6,7 +6,6 @@ pub struct Position {
 #[allow(dead_code)]
 impl Position {
     pub fn val(&self) -> (i32, i32) {
-        self.panic();
         (self.letter, self.number)
     }
     pub fn new(position: (i32, i32)) -> Position {
