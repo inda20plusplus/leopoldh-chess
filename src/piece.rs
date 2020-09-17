@@ -15,14 +15,14 @@ impl Piece {
     pub fn moved(&self) -> bool {
         self.moved
     }
-    pub fn change_name(&mut self, new: String)-> (){
+    pub fn change_name(&mut self, new: String) -> () {
         self.name = new;
     }
     pub fn opponent(&self) -> i32 {
         match self.color {
             1 => 0,
             0 => 1,
-            _ => panic!("bad color")
+            _ => panic!("bad color"),
         }
     }
     pub fn clear(&mut self) {
@@ -40,11 +40,11 @@ impl Piece {
     pub fn mv(&mut self, new: Piece) {
         self.name = new.name;
         self.color = new.color;
-        self.moved = true; 
+        self.moved = true;
     }
-    pub fn promote(&mut self, new: String) -> bool{
-        if self.name == "pawn".to_owned(){
-            self.name =  new;
+    pub fn promote(&mut self, new: String) -> bool {
+        if self.name == "pawn".to_owned() {
+            self.name = new;
             return true;
         }
         false

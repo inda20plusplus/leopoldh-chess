@@ -1,10 +1,9 @@
-mod chess;
-
+use leopoldh_chess::Game;
 fn main() {
-    let mut game = chess::Game::new();
+    let mut game = Game::new();
     game.print();
-    println!("{}",game.small_castling());
+    println!("{}", game.small_castling());
     game.print();
-    println!("{}",game.large_castling());
+    println!("{}", game.large_castling());
     game.print();
 }

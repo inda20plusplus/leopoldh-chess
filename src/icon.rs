@@ -1,6 +1,6 @@
-pub fn icon (color: i32, name: String) -> String{
+pub fn icon(color: i32, name: String) -> String {
     match name.as_str() {
-        "king" if color == 0 =>  return "♔".to_owned(),
+        "king" if color == 0 => return "♔".to_owned(),
         "queen" if color == 0 => return "♕".to_owned(),
         "pawn" if color == 0 => return "♙".to_owned(),
         "rook" if color == 0 => return "♖".to_owned(),

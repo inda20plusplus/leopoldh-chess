@@ -21,11 +21,12 @@ impl Position {
         !(((self.number < 0) || (self.letter < 0)) || ((self.number > 7) || (self.letter > 7)))
     }
     pub fn same(&self, cmp: &Position) -> bool {
-        self.panic();cmp.panic();
+        self.panic();
+        cmp.panic();
         (self.number == cmp.number) && (self.letter == cmp.letter)
     }
-    pub fn panic(&self) -> (){
-        if self.not_inside(){
+    pub fn panic(&self) -> () {
+        if self.not_inside() {
             panic!("bad position");
         }
     }
