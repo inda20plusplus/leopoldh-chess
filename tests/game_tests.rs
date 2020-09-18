@@ -1,6 +1,8 @@
-use leopoldh_chess::Game;
-fn main() {
-    let mut game = Game::new();
+use leopoldh_chess;
+
+#[test]
+fn it_adds_two() {
+    let mut game = leopoldh_chess::Game::new();
     assert!(game.move_piece((1, 0), (3, 0), None));
     assert!(game.move_piece((6, 1), (4, 1), None));
     assert!(game.move_piece((3, 0), (4, 1), None));
