@@ -17,17 +17,14 @@ impl Gamestate {
     }
     pub fn checkmate(&mut self) -> bool {
         let can_move: bool = self.can_move();
-        self.next();
         if self.check() && can_move == false {
-            self.next();
             return true;
         }
-        self.next();
         false
     }
     pub fn stalemate(&mut self) -> bool {
         let can_move: bool = self.can_move();
-        if !self.check() && can_move == false {
+        if self.check() == false && can_move == false {
             self.next();
             return true;
         }
@@ -49,9 +46,10 @@ impl Gamestate {
         }
     }
     fn can_move(&mut self) -> bool {
-        for i in 0..8 {
-            for j in 0..8 {
-                let position = Position::new((i as i32, j as i32));
+
+        for i in 0..1 {
+            for j in 6..7 {
+                let position = Position::new((i.clone() as i32, j.clone() as i32));
                 let moves = self.possible_moves(&position);
                 if moves.len() > 0 {
                     return true;
@@ -74,35 +72,44 @@ impl Gamestate {
         }
         ret
     }
-    pub fn check(&mut self) -> bool {
-        self.next();
-        if self.can_reach_king() {
-            self.next();
-            return true;
-        }
-        self.next();
-        false
-    }
 }
 
 impl Gamestate {
+    pub fn print(&mut self) -> () {
+        let current = self;
+        for i in 0..8 {
+            for j in 0..8 {
+                let piece = current.get_piece(&Position::new((i as i32, j as i32)));
+                print!(" {} ", super::icon::icon(piece.color(), piece.name()));
+            }
+            println!("");
+        }
+        println!("+++++++++++++++++++++++++++++")
+    }
     pub fn get_piece(&mut self, position: &Position) -> &mut Piece {
         position.panic();
         &mut self.board[position.letter as usize][position.number as usize]
     }
+    pub fn get_piece_name(&mut self, position: &Position) -> String {
+        position.panic();
+        self.board[position.letter as usize][position.number as usize].name()
+    }
 
-    fn can_reach_king(&mut self) -> bool {
+    pub fn check(&mut self) -> bool {
+        self.next();
         for i in 0..8 {
             for j in 0..8 {
                 let position = Position::new((i as i32, j as i32));
                 let moves = self.calc_move(&position);
                 for i in moves.iter() {
                     if self.get_piece(&i).name() == "king".to_owned() {
+                        self.next();
                         return true;
                     }
                 }
             }
         }
+        self.next();
         false
     }
     fn move_allowed(&mut self, from: &Position, to: &Position) -> bool {
@@ -120,18 +127,13 @@ impl Gamestate {
             if self.get_piece(&from).color() == 1 {
                 dir = -1;
             }
-            if self.get_piece(&from).name() == "pawn".to_string()
-                && Position::new((to.letter - dir, to.number)).same(&self.enpassant.1)
-            {
-                self.get_piece(&Position::new((to.letter - dir, to.number)))
-                    .clear();
+            if self.get_piece(&from).name() == "pawn".to_string() && Position::new((to.letter - dir, to.number)).same(&self.enpassant.1) {
+                self.get_piece(&Position::new((to.letter - dir, to.number))).clear();
             }
         }
     }
     fn enpassant_next(&mut self, from: Position, to: Position) {
-        if self.get_piece(&from).name() == "pawn".to_string()
-            && (from.letter - to.letter).abs() == 2
-        {
+        if self.get_piece(&from).name() == "pawn".to_string() && (from.letter - to.letter).abs() == 2 {
             self.enpassant = (true, to);
         } else {
             self.enpassant.0 = false;
@@ -148,15 +150,17 @@ impl Gamestate {
         let copy = self.get_piece(&from).clone();
         self.get_piece(&to).mv(copy);
         self.get_piece(&from).clear();
-        if self.get_piece(&to).name() == "pawn".to_owned(){
-            if to.letter == 7 || to.letter == 0{
+        if self.get_piece(&to).name() == "pawn".to_owned() {
+            if to.letter == 7 || to.letter == 0 {
                 match promote {
                     None => return false,
-                    _ => return self.promote(to, promote.unwrap())
+                    _ => return self.promote(to, promote.unwrap()),
                 }
             }
         }
-        self.next();
+        if self.check(){
+            return false;
+        }
         true
     }
 }
@@ -172,41 +176,36 @@ impl Gamestate {
     }
     pub fn small_castling(&mut self) -> bool {
         if !self.small_castling_legal() {
-            println!("bad setup");
             return false;
         }
         self.private_small_castling()
     }
     fn small_castling_legal(&mut self) -> bool {
-        self.get_piece(&Position {
+        self.get_piece_name(&Position {
             number: 4,
             letter: 7 * self.turn,
         })
-        .name()
         .as_str()
             == "king"
             && self
-                .get_piece(&Position {
+                .get_piece_name(&Position {
                     number: 5,
                     letter: 7 * self.turn,
                 })
-                .name()
                 .as_str()
                 == "empty"
             && self
-                .get_piece(&Position {
+                .get_piece_name(&Position {
                     number: 6,
                     letter: 7 * self.turn,
                 })
-                .name()
                 .as_str()
                 == "empty"
             && self
-                .get_piece(&Position {
+                .get_piece_name(&Position {
                     number: 7,
                     letter: 7 * self.turn,
                 })
-                .name()
                 .as_str()
                 == "rook"
             && self
@@ -228,45 +227,20 @@ impl Gamestate {
     fn private_small_castling(&mut self) -> bool {
         let turn = self.turn;
         {
-            let from = self
-                .get_piece(&Position {
-                    number: 4,
-                    letter: 7 * turn,
-                })
-                .clone();
-            self.get_piece(&Position {
-                number: 4,
-                letter: 7 * turn,
-            })
-            .clear();
-            self.get_piece(&Position {
-                number: 6,
-                letter: 7 * turn,
-            })
-            .mv(from);
+            let from = self.get_piece(&Position { number: 4, letter: 7 * turn }).clone();
+            self.get_piece(&Position { number: 4, letter: 7 * turn }).clear();
+            self.get_piece(&Position { number: 6, letter: 7 * turn }).mv(from);
         }
         {
-            let from = self
-                .get_piece(&Position {
-                    number: 7,
-                    letter: 7 * turn,
-                })
-                .clone();
-            self.get_piece(&Position {
-                number: 7,
-                letter: 7 * turn,
-            })
-            .clear();
-            self.get_piece(&Position {
-                number: 5,
-                letter: 7 * turn,
-            })
-            .mv(from);
-        }
-        if self.check() {
-            return false;
+            let from = self.get_piece(&Position { number: 7, letter: 7 * turn }).clone();
+            self.get_piece(&Position { number: 7, letter: 7 * turn }).clear();
+            self.get_piece(&Position { number: 5, letter: 7 * turn }).mv(from);
         }
         self.next();
+        if self.check() {
+            panic!("check");
+           // return false;
+        }
         true
     }
 }
@@ -282,49 +256,43 @@ impl Gamestate {
     }
     pub fn large_castling(&mut self) -> bool {
         if !self.large_castling_legal() {
-            println!("bad setup");
             return false;
         }
         self.private_large_castling()
     }
     fn large_castling_legal(&mut self) -> bool {
-        self.get_piece(&Position {
+        self.get_piece_name(&Position {
             number: 4,
             letter: 7 * self.turn,
         })
-        .name()
         .as_str()
             == "king"
             && self
-                .get_piece(&Position {
+                .get_piece_name(&Position {
                     number: 3,
                     letter: 7 * self.turn,
                 })
-                .name()
                 .as_str()
                 == "empty"
             && self
-                .get_piece(&Position {
+                .get_piece_name(&Position {
                     number: 2,
                     letter: 7 * self.turn,
                 })
-                .name()
                 .as_str()
                 == "empty"
             && self
-                .get_piece(&Position {
+                .get_piece_name(&Position {
                     number: 1,
                     letter: 7 * self.turn,
                 })
-                .name()
                 .as_str()
                 == "empty"
             && self
-                .get_piece(&Position {
+                .get_piece_name(&Position {
                     number: 0,
                     letter: 7 * self.turn,
                 })
-                .name()
                 .as_str()
                 == "rook"
             && self
@@ -346,40 +314,14 @@ impl Gamestate {
     fn private_large_castling(&mut self) -> bool {
         let turn = self.turn;
         {
-            let from = self
-                .get_piece(&Position {
-                    number: 4,
-                    letter: 7 * turn,
-                })
-                .clone();
-            self.get_piece(&Position {
-                number: 4,
-                letter: 7 * turn,
-            })
-            .clear();
-            self.get_piece(&Position {
-                number: 2,
-                letter: 7 * turn,
-            })
-            .mv(from);
+            let from = self.get_piece(&Position { number: 4, letter: 7 * turn }).clone();
+            self.get_piece(&Position { number: 4, letter: 7 * turn }).clear();
+            self.get_piece(&Position { number: 2, letter: 7 * turn }).mv(from);
         }
         {
-            let from = self
-                .get_piece(&Position {
-                    number: 0,
-                    letter: 7 * turn,
-                })
-                .clone();
-            self.get_piece(&Position {
-                number: 0,
-                letter: 7 * turn,
-            })
-            .clear();
-            self.get_piece(&Position {
-                number: 3,
-                letter: 7 * turn,
-            })
-            .mv(from);
+            let from = self.get_piece(&Position { number: 0, letter: 7 * turn }).clone();
+            self.get_piece(&Position { number: 0, letter: 7 * turn }).clear();
+            self.get_piece(&Position { number: 3, letter: 7 * turn }).mv(from);
         }
         if self.check() {
             return false;
@@ -401,7 +343,6 @@ impl Gamestate {
             "queen" | "bishop" | "knight" | "rook" => match piece.color() {
                 0 | 1 => {
                     if piece.promote(to) {
-                        self.next();
                         return true;
                     }
                     return false;
@@ -483,11 +424,7 @@ impl Gamestate {
                     ret.push(cur_position);
                 }
                 if self.enpassant.0 == true {
-                    if self
-                        .enpassant
-                        .1
-                        .same(&Position::new((position.letter, position.number + i)))
-                    {
+                    if self.enpassant.1.same(&Position::new((position.letter, position.number + i))) {
                         ret.push(cur_position);
                     }
                 }

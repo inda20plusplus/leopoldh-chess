@@ -37,27 +37,44 @@ impl Game {
             panic!("reset while game is ongoing");
         }
     }
-    pub fn undo(&mut self) -> () {
+    pub fn undo(&mut self) -> bool {
+        println!("turn {:?}, undo", self.current().turn);
         if self.turn() >= 2 {
             self.game.pop();
+            println!("Success! current turn:{:?}", self.current().turn);
+            self.print();
+            return true;
         }
+        println!("Fail!");
+        false
+
     }
-    pub fn move_piece(&mut self, from: (i32, i32), to: (i32, i32),promote: Option<String>) -> bool {
+    pub fn move_piece(&mut self, from: (i32, i32), to: (i32, i32), promote: Option<String>) -> bool {
         let mut from = Position::new(from);
         let mut to = Position::new(to);
         let mut current = self.current();
+        println!("turn {}, {:?} -> {:?}", self.current().turn, from.val(), to.val());
         if current.move_piece(from, to, promote) {
+            current.next();
             self.game.push(current);
-        }
-        return false;
-    }
-    
-    pub fn small_castling(&mut self) -> bool {
-        let mut current = self.current();
-        if current.small_castling() {
-            self.game.push(current);
+            println!("Success!");
+            self.print();
             return true;
         }
+        println!("Fail!");
+        false
+    }
+
+    pub fn small_castling(&mut self) -> bool {
+        let mut current = self.current();
+        println!("turn {}, O-O", self.current().turn);
+        if current.small_castling() {
+            self.game.push(current);
+            println!("Success!");
+            self.print();
+            return true;
+        }
+        println!("Fail!");
         false
     }
     pub fn small_castling_available(&mut self) -> bool {
@@ -70,10 +87,14 @@ impl Game {
     }
     pub fn large_castling(&mut self) -> bool {
         let mut current = self.current();
+        println!("turn {}, O-O-O", self.current().turn);
         if current.large_castling() {
             self.game.push(current);
+            println!("Success!");
+            self.print();
             return true;
         }
+        println!("Fail!");
         false
     }
 }
@@ -89,6 +110,7 @@ impl Game {
             }
             println!("");
         }
+        println!("+++++++++++++++++++++++++++++")
     }
     pub fn possible_moves(&mut self, position: (i32, i32)) -> Vec<(i32, i32)> {
         let ret = self.current().possible_moves(&Position::new(position));

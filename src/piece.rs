@@ -31,11 +31,7 @@ impl Piece {
         self.moved = false;
     }
     pub fn new(name: String, color: i32) -> Piece {
-        Piece {
-            color,
-            name,
-            moved: false,
-        }
+        Piece { color, name, moved: false }
     }
     pub fn mv(&mut self, new: Piece) {
         self.name = new.name;
