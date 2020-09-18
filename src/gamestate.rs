@@ -79,7 +79,7 @@ impl Gamestate {
         let current = self;
         for i in 0..8 {
             for j in 0..8 {
-                let piece = current.get_piece(&Position::new((i as i32, j as i32)));
+                let piece = current.get_piece(&Position::new((7-i as i32, j as i32)));
                 print!(" {} ", super::icon::icon(piece.color(), piece.name()));
             }
             println!("");
@@ -520,7 +520,7 @@ impl Gamestate {
                 self.board[6][6] = Piece::new("pawn".to_string(), 1);
                 self.board[6][7] = Piece::new("pawn".to_string(), 1);
             }
-            _ => println!("unknown board"),
+            _ => panic!("unknown board")
         }
     }
 }

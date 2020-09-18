@@ -38,14 +38,10 @@ impl Game {
         }
     }
     pub fn undo(&mut self) -> bool {
-        println!("turn {:?}, undo", self.current().turn);
         if self.turn() >= 2 {
             self.game.pop();
-            println!("Success! current turn:{:?}", self.current().turn);
-            self.print();
             return true;
         }
-        println!("Fail!");
         false
 
     }
@@ -53,28 +49,20 @@ impl Game {
         let mut from = Position::new(from);
         let mut to = Position::new(to);
         let mut current = self.current();
-        println!("turn {}, {:?} -> {:?}", self.current().turn, from.val(), to.val());
         if current.move_piece(from, to, promote) {
             current.next();
             self.game.push(current);
-            println!("Success!");
-            self.print();
             return true;
         }
-        println!("Fail!");
         false
     }
 
     pub fn small_castling(&mut self) -> bool {
         let mut current = self.current();
-        println!("turn {}, O-O", self.current().turn);
         if current.small_castling() {
             self.game.push(current);
-            println!("Success!");
-            self.print();
             return true;
         }
-        println!("Fail!");
         false
     }
     pub fn small_castling_available(&mut self) -> bool {
@@ -87,14 +75,10 @@ impl Game {
     }
     pub fn large_castling(&mut self) -> bool {
         let mut current = self.current();
-        println!("turn {}, O-O-O", self.current().turn);
         if current.large_castling() {
             self.game.push(current);
-            println!("Success!");
-            self.print();
             return true;
         }
-        println!("Fail!");
         false
     }
 }
@@ -102,15 +86,7 @@ impl Game {
 #[allow(dead_code)]
 impl Game {
     pub fn print(&mut self) -> () {
-        let mut current = self.current();
-        for i in 0..8 {
-            for j in 0..8 {
-                let piece = current.get_piece(&Position::new((i as i32, j as i32)));
-                print!(" {} ", icon::icon(piece.color(), piece.name()));
-            }
-            println!("");
-        }
-        println!("+++++++++++++++++++++++++++++")
+        self.current().print()
     }
     pub fn possible_moves(&mut self, position: (i32, i32)) -> Vec<(i32, i32)> {
         let ret = self.current().possible_moves(&Position::new(position));
@@ -126,5 +102,16 @@ impl Game {
     pub fn checkmate(&mut self) -> bool {
         let mut current = self.current();
         current.checkmate()
+    }
+    pub fn get_board(&mut self) -> Vec<Vec<(String,i32)>> {
+        let mut ret: Vec<Vec<(String,i32)>> = vec![vec![("".to_owned(), 2);8]; 8];
+        let mut current = self.current();
+        for i in 0..8 {
+            for j in 0..8 {
+                let piece = current.get_piece(&Position::new((i as i32, j as i32)));
+                ret[i][j] = (piece.name().clone(), piece.color().clone());
+            }
+        }
+        ret
     }
 }
