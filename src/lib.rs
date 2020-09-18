@@ -42,23 +42,16 @@ impl Game {
             self.game.pop();
         }
     }
-    pub fn move_piece(&mut self, from: (i32, i32), to: (i32, i32)) -> bool {
+    pub fn move_piece(&mut self, from: (i32, i32), to: (i32, i32),promote: Option<String>) -> bool {
         let mut from = Position::new(from);
         let mut to = Position::new(to);
         let mut current = self.current();
-        if current.move_piece(from, to) {
+        if current.move_piece(from, to, promote) {
             self.game.push(current);
         }
         return false;
     }
-    pub fn promote(&mut self, position: (i32, i32), to: String) -> bool {
-        let mut current = self.current();
-        if current.promote(Position::new(position), to) {
-            self.game.push(current);
-            return true;
-        }
-        false
-    }
+    
     pub fn small_castling(&mut self) -> bool {
         let mut current = self.current();
         if current.small_castling() {
@@ -107,5 +100,9 @@ impl Game {
     pub fn check(&mut self) -> bool {
         let mut current = self.current();
         current.check()
+    }
+    pub fn checkmate(&mut self) -> bool {
+        let mut current = self.current();
+        current.checkmate()
     }
 }

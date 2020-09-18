@@ -66,7 +66,7 @@ impl Gamestate {
         let mut ret: Vec<(i32, i32)> = vec![];
         for i in possible.iter() {
             let mut tmp = self.clone();
-            if tmp.move_piece(position.clone(), i.clone()) {
+            if tmp.move_piece(position.clone(), i.clone(), Some("queen".to_owned())) {
                 if tmp.check() == false {
                     ret.push(i.val());
                 }
@@ -137,7 +137,7 @@ impl Gamestate {
             self.enpassant.0 = false;
         }
     }
-    pub fn move_piece(&mut self, from: Position, to: Position) -> bool {
+    pub fn move_piece(&mut self, from: Position, to: Position, promote: Option<String>) -> bool {
         if !self.move_allowed(&from, &to) {
             return false;
         }
@@ -148,6 +148,14 @@ impl Gamestate {
         let copy = self.get_piece(&from).clone();
         self.get_piece(&to).mv(copy);
         self.get_piece(&from).clear();
+        if self.get_piece(&to).name() == "pawn".to_owned(){
+            if to.letter == 7 || to.letter == 0{
+                match promote {
+                    None => return false,
+                    _ => return self.promote(to, promote.unwrap())
+                }
+            }
+        }
         self.next();
         true
     }
@@ -383,7 +391,7 @@ impl Gamestate {
 //moves
 #[allow(dead_code)]
 impl Gamestate {
-    pub fn promote(&mut self, position: Position, to: String) -> bool {
+    fn promote(&mut self, position: Position, to: String) -> bool {
         position.panic();
         if self.check() {
             return false;
@@ -391,7 +399,7 @@ impl Gamestate {
         let piece = self.get_piece(&position);
         match to.as_str() {
             "queen" | "bishop" | "knight" | "rook" => match piece.color() {
-                0 | 1 if position.letter == 7 || position.letter == 0 => {
+                0 | 1 => {
                     if piece.promote(to) {
                         self.next();
                         return true;
@@ -530,9 +538,8 @@ impl Gamestate {
         for i in [-1, 0, 1].iter() {
             for j in [-1, 0, 1].iter() {
                 if i * j == 0 {
-                    continue;
+                    ret.extend(self.moves(position, (*i, *j), true).iter().copied());
                 }
-                ret.extend(self.moves(position, (*i, *j), true).iter().copied());
             }
         }
         ret
