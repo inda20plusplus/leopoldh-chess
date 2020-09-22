@@ -47,8 +47,8 @@ impl Gamestate {
     }
     fn can_move(&mut self) -> bool {
 
-        for i in 0..1 {
-            for j in 6..7 {
+        for i in 0..8 {
+            for j in 0..8 {
                 let position = Position::new((i.clone() as i32, j.clone() as i32));
                 let moves = self.possible_moves(&position);
                 if moves.len() > 0 {
