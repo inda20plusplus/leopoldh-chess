@@ -1,17 +1,19 @@
 use super::piece::Piece;
 use super::position::Position;
+use super::Color;
+use super::Kind;
 #[derive(Clone)]
 pub struct Gamestate {
     pub board: Vec<Vec<Piece>>,
-    pub turn: i32,
+    pub turn: Color,
     pub enpassant: (bool, Position),
 }
 #[allow(dead_code)]
 impl Gamestate {
     pub fn new() -> Gamestate {
         Gamestate {
-            board: vec![vec![Piece::new("empty".to_string(), 2); 8]; 8],
-            turn: 0,
+            board: vec![vec![Piece::new(Kind::None, Color::None); 8]; 8],
+            turn: Color::White,
             enpassant: (false, Position::new((0, 0))),
         }
     }
@@ -31,22 +33,21 @@ impl Gamestate {
         self.next();
         false
     }
-    pub fn opponent(&self) -> i32 {
+    pub fn opponent(&self) -> Color {
         match self.turn {
-            0 => return 1,
-            1 => return 0,
+            Color::White => return Color::Black,
+            Color::Black => return Color::White,
             _ => panic!("error turn"),
         }
     }
     pub fn next(&mut self) {
         match self.turn {
-            0 => self.turn = 1,
-            1 => self.turn = 0,
+            Color::White => self.turn = Color::Black,
+            Color::Black => self.turn = Color::White,
             _ => panic!("error turn"),
         }
     }
     fn can_move(&mut self) -> bool {
-
         for i in 0..8 {
             for j in 0..8 {
                 let position = Position::new((i.clone() as i32, j.clone() as i32));
@@ -64,7 +65,7 @@ impl Gamestate {
         let mut ret: Vec<(i32, i32)> = vec![];
         for i in possible.iter() {
             let mut tmp = self.clone();
-            if tmp.move_piece(position.clone(), i.clone(), Some("queen".to_owned())) {
+            if tmp.move_piece(position.clone(), i.clone(), Kind::Queen) {
                 if tmp.check() == false {
                     ret.push(i.val());
                 }
@@ -79,8 +80,8 @@ impl Gamestate {
         let current = self;
         for i in 0..8 {
             for j in 0..8 {
-                let piece = current.get_piece(&Position::new((7-i as i32, j as i32)));
-                print!(" {} ", super::icon::icon(piece.color(), piece.name()));
+                let piece = current.get_piece(&Position::new((7 - i as i32, j as i32)));
+                print!(" {} ", super::icon::icon(piece.color(), piece.kind()));
             }
             println!("");
         }
@@ -90,9 +91,9 @@ impl Gamestate {
         position.panic();
         &mut self.board[position.letter as usize][position.number as usize]
     }
-    pub fn get_piece_name(&mut self, position: &Position) -> String {
+    pub fn get_piece_kind(&mut self, position: &Position) -> Kind {
         position.panic();
-        self.board[position.letter as usize][position.number as usize].name()
+        self.board[position.letter as usize][position.number as usize].kind()
     }
 
     pub fn check(&mut self) -> bool {
@@ -102,7 +103,7 @@ impl Gamestate {
                 let position = Position::new((i as i32, j as i32));
                 let moves = self.calc_move(&position);
                 for i in moves.iter() {
-                    if self.get_piece(&i).name() == "king".to_owned() {
+                    if self.get_piece(&i).kind() == Kind::King {
                         self.next();
                         return true;
                     }
@@ -124,22 +125,22 @@ impl Gamestate {
     fn was_enpassant(&mut self, from: Position, to: Position) {
         if self.enpassant.0 {
             let mut dir = 1;
-            if self.get_piece(&from).color() == 1 {
+            if self.get_piece(&from).color() == Color::Black {
                 dir = -1;
             }
-            if self.get_piece(&from).name() == "pawn".to_string() && Position::new((to.letter - dir, to.number)).same(&self.enpassant.1) {
+            if self.get_piece(&from).kind() == Kind::Pawn && Position::new((to.letter - dir, to.number)).same(&self.enpassant.1) {
                 self.get_piece(&Position::new((to.letter - dir, to.number))).clear();
             }
         }
     }
     fn enpassant_next(&mut self, from: Position, to: Position) {
-        if self.get_piece(&from).name() == "pawn".to_string() && (from.letter - to.letter).abs() == 2 {
+        if self.get_piece(&from).kind() == Kind::Pawn && (from.letter - to.letter).abs() == 2 {
             self.enpassant = (true, to);
         } else {
             self.enpassant.0 = false;
         }
     }
-    pub fn move_piece(&mut self, from: Position, to: Position, promote: Option<String>) -> bool {
+    pub fn move_piece(&mut self, from: Position, to: Position, promote: Kind) -> bool {
         if !self.move_allowed(&from, &to) {
             return false;
         }
@@ -150,15 +151,15 @@ impl Gamestate {
         let copy = self.get_piece(&from).clone();
         self.get_piece(&to).mv(copy);
         self.get_piece(&from).clear();
-        if self.get_piece(&to).name() == "pawn".to_owned() {
+        if self.get_piece(&to).kind() == Kind::Pawn {
             if to.letter == 7 || to.letter == 0 {
                 match promote {
-                    None => return false,
-                    _ => return self.promote(to, promote.unwrap()),
+                    Kind::None => return false,
+                    _ => return self.promote(to, promote),
                 }
             }
         }
-        if self.check(){
+        if self.check() {
             return false;
         }
         true
@@ -181,65 +182,38 @@ impl Gamestate {
         self.private_small_castling()
     }
     fn small_castling_legal(&mut self) -> bool {
-        self.get_piece_name(&Position {
-            number: 4,
-            letter: 7 * self.turn,
-        })
-        .as_str()
-            == "king"
-            && self
-                .get_piece_name(&Position {
-                    number: 5,
-                    letter: 7 * self.turn,
-                })
-                .as_str()
-                == "empty"
-            && self
-                .get_piece_name(&Position {
-                    number: 6,
-                    letter: 7 * self.turn,
-                })
-                .as_str()
-                == "empty"
-            && self
-                .get_piece_name(&Position {
-                    number: 7,
-                    letter: 7 * self.turn,
-                })
-                .as_str()
-                == "rook"
-            && self
-                .get_piece(&Position {
-                    number: 4,
-                    letter: 7 * self.turn,
-                })
-                .moved()
-                == false
-            && self
-                .get_piece(&Position {
-                    number: 7,
-                    letter: 7 * self.turn,
-                })
-                .moved()
-                == false
+        let s = match self.turn {
+            Color::Black => 1,
+            Color::White => 0,
+            _ => panic!("bad color"),
+        };
+        self.get_piece_kind(&Position { number: 4, letter: 7 * s }) == Kind::King
+            && self.get_piece_kind(&Position { number: 5, letter: 7 * s }) == Kind::None
+            && self.get_piece_kind(&Position { number: 6, letter: 7 * s }) == Kind::None
+            && self.get_piece_kind(&Position { number: 7, letter: 7 * s }) == Kind::Rook
+            && self.get_piece(&Position { number: 4, letter: 7 * s }).moved() == false
+            && self.get_piece(&Position { number: 7, letter: 7 * s }).moved() == false
             && self.check() == false
     }
     fn private_small_castling(&mut self) -> bool {
-        let turn = self.turn;
+        let s = match self.turn {
+            Color::Black => 1,
+            Color::White => 0,
+            _ => panic!("bad color"),
+        };
         {
-            let from = self.get_piece(&Position { number: 4, letter: 7 * turn }).clone();
-            self.get_piece(&Position { number: 4, letter: 7 * turn }).clear();
-            self.get_piece(&Position { number: 6, letter: 7 * turn }).mv(from);
+            let from = self.get_piece(&Position { number: 4, letter: 7 * s }).clone();
+            self.get_piece(&Position { number: 4, letter: 7 * s }).clear();
+            self.get_piece(&Position { number: 6, letter: 7 * s }).mv(from);
         }
         {
-            let from = self.get_piece(&Position { number: 7, letter: 7 * turn }).clone();
-            self.get_piece(&Position { number: 7, letter: 7 * turn }).clear();
-            self.get_piece(&Position { number: 5, letter: 7 * turn }).mv(from);
+            let from = self.get_piece(&Position { number: 7, letter: 7 * s }).clone();
+            self.get_piece(&Position { number: 7, letter: 7 * s }).clear();
+            self.get_piece(&Position { number: 5, letter: 7 * s }).mv(from);
         }
         self.next();
         if self.check() {
-            panic!("check");
-           // return false;
+            return false;
         }
         true
     }
@@ -261,67 +235,35 @@ impl Gamestate {
         self.private_large_castling()
     }
     fn large_castling_legal(&mut self) -> bool {
-        self.get_piece_name(&Position {
-            number: 4,
-            letter: 7 * self.turn,
-        })
-        .as_str()
-            == "king"
-            && self
-                .get_piece_name(&Position {
-                    number: 3,
-                    letter: 7 * self.turn,
-                })
-                .as_str()
-                == "empty"
-            && self
-                .get_piece_name(&Position {
-                    number: 2,
-                    letter: 7 * self.turn,
-                })
-                .as_str()
-                == "empty"
-            && self
-                .get_piece_name(&Position {
-                    number: 1,
-                    letter: 7 * self.turn,
-                })
-                .as_str()
-                == "empty"
-            && self
-                .get_piece_name(&Position {
-                    number: 0,
-                    letter: 7 * self.turn,
-                })
-                .as_str()
-                == "rook"
-            && self
-                .get_piece(&Position {
-                    number: 4,
-                    letter: 7 * self.turn,
-                })
-                .moved()
-                == false
-            && self
-                .get_piece(&Position {
-                    number: 0,
-                    letter: 7 * self.turn,
-                })
-                .moved()
-                == false
+        let s = match self.turn {
+            Color::Black => 1,
+            Color::White => 0,
+            _ => panic!("bad color"),
+        };
+        self.get_piece_kind(&Position { number: 4, letter: 7 * s }) == Kind::King
+            && self.get_piece_kind(&Position { number: 3, letter: 7 * s }) == Kind::None
+            && self.get_piece_kind(&Position { number: 2, letter: 7 * s }) == Kind::None
+            && self.get_piece_kind(&Position { number: 1, letter: 7 * s }) == Kind::None
+            && self.get_piece_kind(&Position { number: 0, letter: 7 * s }) == Kind::Rook
+            && self.get_piece(&Position { number: 4, letter: 7 * s }).moved() == false
+            && self.get_piece(&Position { number: 0, letter: 7 * s }).moved() == false
             && self.check() == false
     }
     fn private_large_castling(&mut self) -> bool {
-        let turn = self.turn;
+        let s = match self.turn {
+            Color::Black => 1,
+            Color::White => 0,
+            _ => panic!("bad color"),
+        };
         {
-            let from = self.get_piece(&Position { number: 4, letter: 7 * turn }).clone();
-            self.get_piece(&Position { number: 4, letter: 7 * turn }).clear();
-            self.get_piece(&Position { number: 2, letter: 7 * turn }).mv(from);
+            let from = self.get_piece(&Position { number: 4, letter: 7 * s }).clone();
+            self.get_piece(&Position { number: 4, letter: 7 * s }).clear();
+            self.get_piece(&Position { number: 2, letter: 7 * s }).mv(from);
         }
         {
-            let from = self.get_piece(&Position { number: 0, letter: 7 * turn }).clone();
-            self.get_piece(&Position { number: 0, letter: 7 * turn }).clear();
-            self.get_piece(&Position { number: 3, letter: 7 * turn }).mv(from);
+            let from = self.get_piece(&Position { number: 0, letter: 7 * s }).clone();
+            self.get_piece(&Position { number: 0, letter: 7 * s }).clear();
+            self.get_piece(&Position { number: 3, letter: 7 * s }).mv(from);
         }
         if self.check() {
             return false;
@@ -333,15 +275,15 @@ impl Gamestate {
 //moves
 #[allow(dead_code)]
 impl Gamestate {
-    fn promote(&mut self, position: Position, to: String) -> bool {
+    fn promote(&mut self, position: Position, to: Kind) -> bool {
         position.panic();
         if self.check() {
             return false;
         }
         let piece = self.get_piece(&position);
-        match to.as_str() {
-            "queen" | "bishop" | "knight" | "rook" => match piece.color() {
-                0 | 1 => {
+        match to {
+            Kind::Queen | Kind::King | Kind::Knight | Kind::Rook => match piece.color() {
+                Color::White | Color::Black => {
                     if piece.promote(to) {
                         return true;
                     }
@@ -357,14 +299,14 @@ impl Gamestate {
         if player.color() != self.turn {
             return vec![];
         }
-        match &self.get_piece(position).name().as_str() {
-            &"king" => return self.king_moves(position),
-            &"queen" => return self.queen_moves(position),
-            &"rook" => return self.rook_moves(position),
-            &"knight" => return self.knight_moves(position),
-            &"bishop" => return self.bishop_moves(position),
-            &"pawn" => return self.pawn_moves(position),
-            _ => panic!("bad name"),
+        match &self.get_piece(position).kind() {
+            &Kind::King => return self.king_moves(position),
+            &Kind::Queen => return self.queen_moves(position),
+            &Kind::Rook => return self.rook_moves(position),
+            &Kind::Knight => return self.knight_moves(position),
+            &Kind::Bishop => return self.bishop_moves(position),
+            &Kind::Pawn => return self.pawn_moves(position),
+            _ => panic!("bad kind"),
         }
     }
     fn knight_moves(&mut self, position: &Position) -> Vec<Position> {
@@ -388,8 +330,8 @@ impl Gamestate {
     }
     fn pawn_moves(&mut self, position: &Position) -> Vec<Position> {
         match self.get_piece(&position).color() {
-            0 => return self.pawn(position, 1),
-            1 => return self.pawn(position, -1),
+            Color::White => return self.pawn(position, 1),
+            Color::Black => return self.pawn(position, -1),
             _ => return vec![Position::new((1, 1))],
         }
     }
@@ -402,14 +344,14 @@ impl Gamestate {
                 letter: (position.letter + dir),
             };
             if cur_position.inside() {
-                if self.get_piece(&cur_position).color() == 2 {
+                if self.get_piece(&cur_position).color() == Color::None {
                     ret.push(cur_position);
                     let cur_position1 = Position {
                         number: (position.number),
                         letter: (position.letter + 2 * dir),
                     };
                     if !piece.moved() {
-                        if self.get_piece(&cur_position1).color() == 2 {
+                        if self.get_piece(&cur_position1).color() == Color::None {
                             ret.push(cur_position1);
                         }
                     }
@@ -446,7 +388,7 @@ impl Gamestate {
             if cur_piece.color() != self.turn {
                 ret.push(cur_position.clone());
             }
-            if cur_piece.color() != 2 || !inf {
+            if cur_piece.color() != Color::None || !inf {
                 break;
             }
         }
@@ -487,40 +429,40 @@ impl Gamestate {
     pub fn populate(&mut self, gamestyle: String) -> () {
         match gamestyle.as_str() {
             "default" => {
-                self.board[0][0] = Piece::new("rook".to_string(), 0);
-                self.board[0][1] = Piece::new("knight".to_string(), 0);
-                self.board[0][2] = Piece::new("bishop".to_string(), 0);
-                self.board[0][3] = Piece::new("queen".to_string(), 0);
-                self.board[0][4] = Piece::new("king".to_string(), 0);
-                self.board[0][5] = Piece::new("bishop".to_string(), 0);
-                self.board[0][6] = Piece::new("knight".to_string(), 0);
-                self.board[0][7] = Piece::new("rook".to_string(), 0);
-                self.board[7][0] = Piece::new("rook".to_string(), 1);
-                self.board[7][1] = Piece::new("knight".to_string(), 1);
-                self.board[7][2] = Piece::new("bishop".to_string(), 1);
-                self.board[7][3] = Piece::new("queen".to_string(), 1);
-                self.board[7][4] = Piece::new("king".to_string(), 1);
-                self.board[7][5] = Piece::new("bishop".to_string(), 1);
-                self.board[7][6] = Piece::new("knight".to_string(), 1);
-                self.board[7][7] = Piece::new("rook".to_string(), 1);
-                self.board[1][0] = Piece::new("pawn".to_string(), 0);
-                self.board[1][1] = Piece::new("pawn".to_string(), 0);
-                self.board[1][2] = Piece::new("pawn".to_string(), 0);
-                self.board[1][3] = Piece::new("pawn".to_string(), 0);
-                self.board[1][4] = Piece::new("pawn".to_string(), 0);
-                self.board[1][5] = Piece::new("pawn".to_string(), 0);
-                self.board[1][6] = Piece::new("pawn".to_string(), 0);
-                self.board[1][7] = Piece::new("pawn".to_string(), 0);
-                self.board[6][0] = Piece::new("pawn".to_string(), 1);
-                self.board[6][1] = Piece::new("pawn".to_string(), 1);
-                self.board[6][2] = Piece::new("pawn".to_string(), 1);
-                self.board[6][3] = Piece::new("pawn".to_string(), 1);
-                self.board[6][4] = Piece::new("pawn".to_string(), 1);
-                self.board[6][5] = Piece::new("pawn".to_string(), 1);
-                self.board[6][6] = Piece::new("pawn".to_string(), 1);
-                self.board[6][7] = Piece::new("pawn".to_string(), 1);
+                self.board[0][0] = Piece::new(Kind::Rook, Color::White);
+                self.board[0][1] = Piece::new(Kind::Knight, Color::White);
+                self.board[0][2] = Piece::new(Kind::Bishop, Color::White);
+                self.board[0][3] = Piece::new(Kind::Queen, Color::White);
+                self.board[0][4] = Piece::new(Kind::King, Color::White);
+                self.board[0][5] = Piece::new(Kind::Bishop, Color::White);
+                self.board[0][6] = Piece::new(Kind::Knight, Color::White);
+                self.board[0][7] = Piece::new(Kind::Rook, Color::White);
+                self.board[7][0] = Piece::new(Kind::Rook, Color::Black);
+                self.board[7][1] = Piece::new(Kind::Knight, Color::Black);
+                self.board[7][2] = Piece::new(Kind::Bishop, Color::Black);
+                self.board[7][3] = Piece::new(Kind::Queen, Color::Black);
+                self.board[7][4] = Piece::new(Kind::King, Color::Black);
+                self.board[7][5] = Piece::new(Kind::Bishop, Color::Black);
+                self.board[7][6] = Piece::new(Kind::Knight, Color::Black);
+                self.board[7][7] = Piece::new(Kind::Rook, Color::Black);
+                self.board[1][0] = Piece::new(Kind::Pawn, Color::White);
+                self.board[1][1] = Piece::new(Kind::Pawn, Color::White);
+                self.board[1][2] = Piece::new(Kind::Pawn, Color::White);
+                self.board[1][3] = Piece::new(Kind::Pawn, Color::White);
+                self.board[1][4] = Piece::new(Kind::Pawn, Color::White);
+                self.board[1][5] = Piece::new(Kind::Pawn, Color::White);
+                self.board[1][6] = Piece::new(Kind::Pawn, Color::White);
+                self.board[1][7] = Piece::new(Kind::Pawn, Color::White);
+                self.board[6][0] = Piece::new(Kind::Pawn, Color::Black);
+                self.board[6][1] = Piece::new(Kind::Pawn, Color::Black);
+                self.board[6][2] = Piece::new(Kind::Pawn, Color::Black);
+                self.board[6][3] = Piece::new(Kind::Pawn, Color::Black);
+                self.board[6][4] = Piece::new(Kind::Pawn, Color::Black);
+                self.board[6][5] = Piece::new(Kind::Pawn, Color::Black);
+                self.board[6][6] = Piece::new(Kind::Pawn, Color::Black);
+                self.board[6][7] = Piece::new(Kind::Pawn, Color::Black);
             }
-            _ => panic!("unknown board")
+            _ => panic!("unknown board"),
         }
     }
 }
