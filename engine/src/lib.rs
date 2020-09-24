@@ -43,7 +43,6 @@ impl Game {
             return true;
         }
         false
-
     }
     pub fn move_piece(&mut self, from: (i32, i32), to: (i32, i32), promote: Option<String>) -> bool {
         let mut from = Position::new(from);
@@ -103,8 +102,8 @@ impl Game {
         let mut current = self.current();
         current.checkmate()
     }
-    pub fn get_board(&mut self) -> Vec<Vec<(String,i32)>> {
-        let mut ret: Vec<Vec<(String,i32)>> = vec![vec![("".to_owned(), 2);8]; 8];
+    pub fn get_board(&mut self) -> Vec<Vec<(String, i32)>> {
+        let mut ret: Vec<Vec<(String, i32)>> = vec![vec![("".to_owned(), 2); 8]; 8];
         let mut current = self.current();
         for i in 0..8 {
             for j in 0..8 {

@@ -46,9 +46,8 @@ impl Gamestate {
         }
     }
     fn can_move(&mut self) -> bool {
-
-        for i in 0..1 {
-            for j in 6..7 {
+        for i in 0..8 {
+            for j in 0..8 {
                 let position = Position::new((i.clone() as i32, j.clone() as i32));
                 let moves = self.possible_moves(&position);
                 if moves.len() > 0 {
@@ -79,7 +78,7 @@ impl Gamestate {
         let current = self;
         for i in 0..8 {
             for j in 0..8 {
-                let piece = current.get_piece(&Position::new((7-i as i32, j as i32)));
+                let piece = current.get_piece(&Position::new((7 - i as i32, j as i32)));
                 print!(" {} ", super::icon::icon(piece.color(), piece.name()));
             }
             println!("");
@@ -158,7 +157,7 @@ impl Gamestate {
                 }
             }
         }
-        if self.check(){
+        if self.check() {
             return false;
         }
         true
@@ -239,7 +238,7 @@ impl Gamestate {
         self.next();
         if self.check() {
             panic!("check");
-           // return false;
+            // return false;
         }
         true
     }
@@ -520,7 +519,7 @@ impl Gamestate {
                 self.board[6][6] = Piece::new("pawn".to_string(), 1);
                 self.board[6][7] = Piece::new("pawn".to_string(), 1);
             }
-            _ => panic!("unknown board")
+            _ => panic!("unknown board"),
         }
     }
 }
