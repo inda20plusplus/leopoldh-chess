@@ -1,14 +1,13 @@
 use engine::Game;
 use ggez::event;
 use ggez::graphics;
-use ggez::input;
 use ggez::nalgebra as na;
 use ggez::{Context, GameResult};
+use std::path;
 
 struct MainState {
     game: Game,
     history: Vec<(i32, i32)>,
-    promotion_type: event::KeyCode,
 }
 
 impl MainState {
@@ -16,7 +15,6 @@ impl MainState {
         let s = MainState {
             game: Game::new(),
             history: Vec::new(),
-            promotion_type: event::KeyCode::Q,
         };
         Ok(s)
     }
@@ -167,21 +165,11 @@ impl event::EventHandler for MainState {
             println!("{:?}", self.history)
         }
     }
-
-    fn key_down_event(
-        &mut self,
-        _ctx: &mut Context,
-        keycode: event::KeyCode,
-        keymod: event::KeyMods,
-        repeat: bool,
-    ) {
-        self.promotion_type = keycode;
-    }
 }
 
 pub fn main() -> GameResult {
-    let cb = ggez::ContextBuilder::new("Chess", "Hisham");
-
+    let resource_dir = path::PathBuf::from("./gui/resources");
+    let cb = ggez::ContextBuilder::new("Chess", "Hisham").add_resource_path(resource_dir);
     let (ctx, event_loop) = &mut cb.build()?;
     let state = &mut MainState::new()?;
     event::run(ctx, event_loop, state)
