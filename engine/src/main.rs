@@ -1,8 +1,9 @@
-use engine::Game;
+use leopoldh_chess::Game;
+use leopoldh_chess::Kind;
 fn main() {
     let mut game = Game::new();
     let _board = game.get_board(); //Vec<Vec<(String, i32)>> Name of piece and color(0 = white)
-    game.move_piece((0, 1), (2, 0), None); //promote = None or Some(name of piece to promote if needed| "queen", "knight", "rook", "bishop")
+    game.move_piece((0, 1), (2, 0), Kind::None); //promote = None or Some(name of piece to promote if needed| "queen", "knight", "rook", "bishop")
     game.small_castling();
     game.large_castling();
     game.check();

@@ -4,6 +4,22 @@ mod piece;
 mod position;
 use gamestate::Gamestate;
 use position::Position;
+#[derive(Clone, PartialEq, Copy)]
+pub enum Color {
+    Black,
+    White,
+    None,
+}
+#[derive(Clone, PartialEq)]
+pub enum Kind {
+    King,
+    Queen,
+    Rook,
+    Bishop,
+    Pawn,
+    Knight,
+    None,
+}
 pub struct Game {
     game: Vec<Gamestate>,
 }
@@ -30,13 +46,6 @@ impl Game {
             panic!("reset while game is ongoing");
         }
     }
-    pub fn special(&mut self, val: String) -> () {
-        if self.turn() == 1 {
-            self.game[0].populate("default".to_owned());
-        } else {
-            panic!("reset while game is ongoing");
-        }
-    }
     pub fn undo(&mut self) -> bool {
         if self.turn() >= 2 {
             self.game.pop();
@@ -44,7 +53,7 @@ impl Game {
         }
         false
     }
-    pub fn move_piece(&mut self, from: (i32, i32), to: (i32, i32), promote: Option<String>) -> bool {
+    pub fn move_piece(&mut self, from: (i32, i32), to: (i32, i32), promote: Kind) -> bool {
         let mut from = Position::new(from);
         let mut to = Position::new(to);
         let mut current = self.current();
@@ -102,13 +111,13 @@ impl Game {
         let mut current = self.current();
         current.checkmate()
     }
-    pub fn get_board(&mut self) -> Vec<Vec<(String, i32)>> {
-        let mut ret: Vec<Vec<(String, i32)>> = vec![vec![("".to_owned(), 2); 8]; 8];
+    pub fn get_board(&mut self) -> Vec<Vec<(Kind, Color)>> {
+        let mut ret: Vec<Vec<(Kind, Color)>> = vec![vec![(Kind::None, Color::None); 8]; 8];
         let mut current = self.current();
         for i in 0..8 {
             for j in 0..8 {
                 let piece = current.get_piece(&Position::new((i as i32, j as i32)));
-                ret[i][j] = (piece.name().clone(), piece.color().clone());
+                ret[i][j] = (piece.kind().clone(), piece.color().clone());
             }
         }
         ret
