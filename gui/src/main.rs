@@ -1,4 +1,6 @@
 use engine::Game;
+use engine::Color;
+use engine::Kind;
 use ggez::event;
 use ggez::graphics;
 use ggez::nalgebra as na;
@@ -25,19 +27,19 @@ impl event::EventHandler for MainState {
         if self.history.len() == 2 {
             let possible_moves = self.game.possible_moves(self.history[0]);
             if possible_moves.contains(&self.history[1]) {
-                self.game.move_piece(self.history[0], self.history[1], None);
+                self.game.move_piece(self.history[0], self.history[1], Kind::None);
                 // Promotion
                 if self.history[1].0 == 7 || self.history[1].0 == 0 {
                     if self.game.get_board()[self.history[0].0 as usize][self.history[0].1 as usize]
-                        == (String::from("pawn"), 0)
+                        == (Kind::Pawn, Color::White)
                         || self.game.get_board()[self.history[0].0 as usize]
                             [self.history[0].1 as usize]
-                            == (String::from("pawn"), 1)
+                            == (Kind::Pawn, Color::Black)
                     {
                         self.game.move_piece(
                             self.history[0],
                             self.history[1],
-                            Some(String::from("queen")),
+                            Kind::Queen,
                         );
                     }
                 }
@@ -89,13 +91,13 @@ impl event::EventHandler for MainState {
                 )?;
                 graphics::draw(ctx, &rectangle, (na::Point2::new(s_x, s_y),))?;
                 let piece = self.game.get_board()[7 - i][j].clone();
-                if piece.0 != String::from("empty") {
+                if piece.0 != Kind::None {
                     let piece_color = match piece.1 {
-                        0 => "white",
-                        1 => "black",
+                        Color::White => "white",
+                        Color::Black => "black",
                         _ => "",
                     };
-                    let path = "/icons/".to_string() + piece_color + "_" + &piece.0 + ".png";
+                    let path = "/icons/".to_string() + piece_color + "_" + &piece.0.name() + ".png";
                     let image = graphics::Image::new(ctx, path).unwrap();
                     graphics::draw(ctx, &image, (na::Point2::new(s_x + 17.0, s_y + 10.0),))?;
                 }

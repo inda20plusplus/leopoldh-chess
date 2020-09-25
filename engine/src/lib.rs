@@ -20,6 +20,19 @@ pub enum Kind {
     Knight,
     None,
 }
+impl Kind {
+    pub fn name(&self)->String{
+        match self {
+            Kind::King=>"king".to_string(),
+            Kind::Queen=>"queen".to_string(),
+            Kind::Pawn=>"pawn".to_string(),
+            Kind::Knight=>"knight".to_string(),
+            Kind::Bishop=>"bishop".to_string(),
+            Kind::Rook=>"rook".to_string(),
+            _=>"empty".to_string()
+        }
+    }
+}
 pub struct Game {
     game: Vec<Gamestate>,
 }

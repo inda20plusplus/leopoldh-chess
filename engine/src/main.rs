@@ -1,5 +1,5 @@
-use leopoldh_chess::Game;
-use leopoldh_chess::Kind;
+use engine::Game;
+use engine::Kind;
 fn main() {
     let mut game = Game::new();
     let _board = game.get_board(); //Vec<Vec<(String, i32)>> Name of piece and color(0 = white)
