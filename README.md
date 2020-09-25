@@ -9,8 +9,8 @@ Following the rules from [Rules of chess](https://en.wikipedia.org/wiki/Rules_of
 ### Commands
 ```rust
 let mut game = Game::new(); //returns a board populated with default setup
-let board = game.get_board(); //Vec<Vec<(String, i32)>> Name of piece and color(0 = white)
-game.move_piece((0, 1), (2, 0), None);//promote = None or Some(name of piece to promote if needed| "queen", "knight","rook", "bishop")
+let board = game.get_board(); //Vec<Vec<(String, i32)>> Name of piece and color
+game.move_piece((0, 1), (2, 0), Kind::None);//promote = Kind
 game.small_castling();//executes move if possible
 game.large_castling();//executes move if possible
 game.small_castling_available();//checks if possible
@@ -22,15 +22,3 @@ game.print();//print the board (obs A1/(0,0) bottom left corner)
 game.undo();//undo last move
 game.possible_moves((0, 0));//possible moves for a position
 ```
-
-### Piece names:
-* "king" 
-* "queen" 
-* "pawn" 
-* "rook" 
-* "bishop"
-* "knight"
-### piece color:
-* 0 = white
-* 1 = black
-* 2 = empty
