@@ -9,7 +9,7 @@ Following the rules from [Rules of chess](https://en.wikipedia.org/wiki/Rules_of
 ### Commands
 ```rust
 let mut game = Game::new(); //returns a board populated with default setup
-let board = game.get_board(); //Vec<Vec<(String, i32)>> Name of piece and color
+let board = game.get_board(); //Vec<Vec<(Kind, Color)>> 
 game.move_piece((0, 1), (2, 0), Kind::None);//promote = Kind
 game.small_castling();//executes move if possible
 game.large_castling();//executes move if possible
