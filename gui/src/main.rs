@@ -138,7 +138,7 @@ impl event::EventHandler for MainState {
             graphics::draw(ctx, &text, (na::Point2::new(150.0, 250.0), warning_color))?;
         }
         if self.game.check() && !self.game.checkmate() {
-            let mut text = graphics::Text::new("Checkmate!");
+            let mut text = graphics::Text::new("check!");
             text.set_font(graphics::Font::default(), graphics::Scale::uniform(100.0));
             graphics::draw(ctx, &text, (na::Point2::new(150.0, 250.0), warning_color))?;
         }
