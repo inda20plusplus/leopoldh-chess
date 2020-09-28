@@ -1,3 +1,6 @@
+[![Build Status](https://travis-ci.org/inda20plusplus/leopoldh-chess.svg?branch=master)](https://travis-ci.org/inda20plusplus/leopoldh-chess)
+
+
 # leopoldh-chess
 Rust chess library to build great chess games with.
 Following the rules from [Rules of chess](https://en.wikipedia.org/wiki/Rules_of_chess).
