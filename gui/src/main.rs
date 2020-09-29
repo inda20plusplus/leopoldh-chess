@@ -164,7 +164,6 @@ impl event::EventHandler for MainState {
             let x = (x / 100.0).floor() as i32;
             let y = 7 - (y / 75.0).floor() as i32;
             self.history.push((y, x));
-            println!("{:?}", self.history)
         }
     }
 }
