@@ -41,3 +41,21 @@ fn it_adds_two() {
     game.print();
     println!("{}", game.stalemate());
 }
+#[test]
+fn gamestate_and_moves() {
+    let mut game = engine::Game::new();
+    let _board = game.get_board(); 
+
+    assert!(game.move_piece((0, 1), (2, 0), Kind::None)); 
+    assert!(!game.small_castling()); 
+    assert!(!game.large_castling());
+    assert!(!game.check()); 
+    assert!(!game.checkmate()); 
+    assert!(!game.stalemate()); 
+    game.print(); 
+    assert!(game.move_piece((6, 0), (5, 0), Kind::None)); 
+    assert_eq!(game.possible_moves((0,0)).len(), 1); 
+    game.undo(); 
+    game.undo(); 
+    assert_eq!(game.possible_moves((0, 0)).len(), 0); 
+}
