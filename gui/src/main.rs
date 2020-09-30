@@ -138,16 +138,16 @@ impl event::EventHandler for MainState {
             graphics::draw(ctx, &text, (na::Point2::new(150.0, 250.0), warning_color))?;
         }
         if self.game.check() && !self.game.checkmate() {
-            let mut text = graphics::Text::new("Checkmate!");
+            let mut text = graphics::Text::new("Check!");
             text.set_font(graphics::Font::default(), graphics::Scale::uniform(100.0));
-            graphics::draw(ctx, &text, (na::Point2::new(150.0, 250.0), warning_color))?;
+            graphics::draw(ctx, &text, (na::Point2::new(250.0, 250.0), warning_color))?;
         }
 
         if self.game.stalemate() {
             graphics::clear(ctx, [0.0, 0.0, 0.0, 1.0].into());
             let mut text = graphics::Text::new("Draw!");
             text.set_font(graphics::Font::default(), graphics::Scale::uniform(100.0));
-            graphics::draw(ctx, &text, (na::Point2::new(150.0, 250.0), warning_color))?;
+            graphics::draw(ctx, &text, (na::Point2::new(250.0, 250.0), warning_color))?;
         }
 
         graphics::present(ctx)?;
@@ -164,7 +164,6 @@ impl event::EventHandler for MainState {
             let x = (x / 100.0).floor() as i32;
             let y = 7 - (y / 75.0).floor() as i32;
             self.history.push((y, x));
-            println!("{:?}", self.history)
         }
     }
 }
