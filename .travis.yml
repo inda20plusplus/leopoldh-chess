@@ -4,6 +4,8 @@ before_install:
   - sudo apt install -y libasound2-dev
   - sudo apt-get install -y libudev-dev
   - sudo apt install -y pkg-config
+before_script:
+        - rustup component add rustfmt-preview
 script:
   - cargo fmt -- --check
   - cargo build --verbose --workspace
