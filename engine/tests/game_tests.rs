@@ -36,7 +36,7 @@ fn it_adds_two() {
     assert!(game.move_piece((0, 2), (0, 3), Kind::None));
     assert!(game.move_piece((0, 5), (0, 4), Kind::None));
     assert!(game.move_piece((0, 3), (0, 4), Kind::None));
-    assert!(!game.move_piece((0, 6), (0, 5),Kind::None));
+    assert!(!game.move_piece((0, 6), (0, 5), Kind::None));
     game.undo();
     game.print();
     println!("{}", game.stalemate());
@@ -44,18 +44,18 @@ fn it_adds_two() {
 #[test]
 fn gamestate_and_moves() {
     let mut game = engine::Game::new();
-    let _board = game.get_board(); 
+    let _board = game.get_board();
 
-    assert!(game.move_piece((0, 1), (2, 0), Kind::None)); 
-    assert!(!game.small_castling()); 
+    assert!(game.move_piece((0, 1), (2, 0), Kind::None));
+    assert!(!game.small_castling());
     assert!(!game.large_castling());
-    assert!(!game.check()); 
-    assert!(!game.checkmate()); 
-    assert!(!game.stalemate()); 
-    game.print(); 
-    assert!(game.move_piece((6, 0), (5, 0), Kind::None)); 
-    assert_eq!(game.possible_moves((0,0)).len(), 1); 
-    game.undo(); 
-    game.undo(); 
-    assert_eq!(game.possible_moves((0, 0)).len(), 0); 
+    assert!(!game.check());
+    assert!(!game.checkmate());
+    assert!(!game.stalemate());
+    game.print();
+    assert!(game.move_piece((6, 0), (5, 0), Kind::None));
+    assert_eq!(game.possible_moves((0, 0)).len(), 1);
+    game.undo();
+    game.undo();
+    assert_eq!(game.possible_moves((0, 0)).len(), 0);
 }
