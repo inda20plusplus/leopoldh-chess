@@ -5,5 +5,6 @@ before_install:
   - sudo apt-get install -y libudev-dev
   - sudo apt install -y pkg-config
 script:
+  - cargo fmt -- --check
   - cargo build --verbose --workspace
   - cargo test --verbose
