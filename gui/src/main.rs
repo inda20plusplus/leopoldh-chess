@@ -162,6 +162,21 @@ impl event::EventHandler for MainState {
             let x = (x / 100.0).floor() as i32;
             let y = 7 - (y / 75.0).floor() as i32;
             self.history.push((y, x));
+            println!("{:?}", self.history)
+        }
+    }
+    fn key_down_event(
+        &mut self,
+        _ctx: &mut Context,
+        key: event::KeyCode,
+        _: event::KeyMods,
+        _: bool,
+    ) {
+        match key {
+            event::KeyCode::Z => {
+                self.game.undo();
+            }
+            _ => (),
         }
     }
 }
