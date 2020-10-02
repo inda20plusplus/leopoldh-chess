@@ -1,5 +1,5 @@
-use engine::Game;
 use engine::Color;
+use engine::Game;
 use engine::Kind;
 use ggez::event;
 use ggez::graphics;
@@ -27,7 +27,8 @@ impl event::EventHandler for MainState {
         if self.history.len() == 2 {
             let possible_moves = self.game.possible_moves(self.history[0]);
             if possible_moves.contains(&self.history[1]) {
-                self.game.move_piece(self.history[0], self.history[1], Kind::None);
+                self.game
+                    .move_piece(self.history[0], self.history[1], Kind::None);
                 // Promotion
                 if self.history[1].0 == 7 || self.history[1].0 == 0 {
                     if self.game.get_board()[self.history[0].0 as usize][self.history[0].1 as usize]
@@ -36,11 +37,8 @@ impl event::EventHandler for MainState {
                             [self.history[0].1 as usize]
                             == (Kind::Pawn, Color::Black)
                     {
-                        self.game.move_piece(
-                            self.history[0],
-                            self.history[1],
-                            Kind::Queen,
-                        );
+                        self.game
+                            .move_piece(self.history[0], self.history[1], Kind::Queen);
                     }
                 }
             }
