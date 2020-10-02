@@ -6,3 +6,4 @@ before_install:
   - sudo apt install -y pkg-config
 script:
   - cargo build --verbose --workspace
+  - cargo test --verbose
