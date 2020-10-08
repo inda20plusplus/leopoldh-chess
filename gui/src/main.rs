@@ -1,3 +1,4 @@
+mod network;
 use engine::Color;
 use engine::Game;
 use engine::Kind;
@@ -21,9 +22,13 @@ impl MainState {
         Ok(s)
     }
 }
+// if buf[0] == 0x01 {
+//     let x = buf[..][2] & 0x07;
+//     let y = (buf[..][3] & 0x38) >> 3;
+// }
 
 impl event::EventHandler for MainState {
-    fn update(&mut self, ctx: &mut Context) -> GameResult {
+    fn update(&mut self, _ctx: &mut Context) -> GameResult {
         if self.history.len() == 2 {
             let possible_moves = self.game.possible_moves(self.history[0]);
             if possible_moves.contains(&self.history[1]) {
@@ -162,7 +167,6 @@ impl event::EventHandler for MainState {
             let x = (x / 100.0).floor() as i32;
             let y = 7 - (y / 75.0).floor() as i32;
             self.history.push((y, x));
-            println!("{:?}", self.history)
         }
     }
     fn key_down_event(
