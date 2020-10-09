@@ -6,34 +6,95 @@ use ggez::event;
 use ggez::graphics;
 use ggez::nalgebra as na;
 use ggez::{Context, GameResult};
+use network::*;
 use std::path;
-
 struct MainState {
     game: Game,
     history: Vec<(i32, i32)>,
+    network: Option<Network>,
+    mode: GameMode,
+    messages: Vec<(char, char, (i32, i32), (i32, i32))>,
 }
-
+// TODO
+/*
+    [] Get the recieved messages
+    [] Handle the recieved messages
+    [] Make a send method
+    [] H
+    [] Display a screen in the beginning to choose the mode of the game
+*/
 impl MainState {
     fn new() -> GameResult<MainState> {
         let s = MainState {
             game: Game::new(),
             history: Vec::new(),
+            mode: GameMode::Listen,
+            network: Some(Network::new("127.0.0.1:3333", false)),
+            messages: Vec::new(),
         };
         Ok(s)
     }
-}
-// if buf[0] == 0x01 {
-//     let x = buf[..][2] & 0x07;
-//     let y = (buf[..][3] & 0x38) >> 3;
-// }
 
+    fn get_recieved_messages(&mut self) {
+        if let Some(netowrk) = self.network.as_mut() {
+            self.messages.push(netowrk.recieve());
+        }
+    }
+
+    fn handle_recieved_messages(&mut self, x: (char, char, (i32, i32), (i32, i32))) {
+        match x.0 {
+            'D' => {}
+            'M' => {
+                self.history.push(x.2);
+                self.history.push(x.3);
+            }
+            'U' => {
+                let x = self.game.undo();
+            }
+            'A' => {}
+            'C' => {}
+            'D' => {}
+            'R' => panic!(),
+            _ => {}
+        }
+    }
+
+    fn send_message(&mut self, msg: Vec<u8>) {
+        match self.network.as_mut() {
+            Some(network) => network.write(msg),
+            None => {}
+        }
+    }
+
+    fn position_in_bytes(&mut self, pos: (i32, i32)) -> u8 {
+        let x: u8 = pos.0 as u8 | (pos.1 << 3) as u8;
+        x
+    }
+}
+#[derive(PartialEq)]
+enum GameMode {
+    Connect,
+    Listen,
+    Normal,
+    None,
+}
 impl event::EventHandler for MainState {
     fn update(&mut self, _ctx: &mut Context) -> GameResult {
+        if self.mode == GameMode::Connect || self.mode == GameMode::Listen {
+            self.get_recieved_messages();
+            if self.messages.len() == 1 {
+                self.handle_recieved_messages(self.messages[0]);
+                self.messages.remove(0);
+            }
+        }
         if self.history.len() == 2 {
             let possible_moves = self.game.possible_moves(self.history[0]);
             if possible_moves.contains(&self.history[1]) {
                 self.game
                     .move_piece(self.history[0], self.history[1], Kind::None);
+                let pos = self.position_in_bytes(self.history[0]);
+                let pos_2 = self.position_in_bytes(self.history[1]);
+                self.send_message(vec![0x01, 0x0, pos, pos_2]);
                 // Promotion
                 if self.history[1].0 == 7 || self.history[1].0 == 0 {
                     if self.game.get_board()[self.history[0].0 as usize][self.history[0].1 as usize]
@@ -44,6 +105,9 @@ impl event::EventHandler for MainState {
                     {
                         self.game
                             .move_piece(self.history[0], self.history[1], Kind::Queen);
+                        let pos = self.position_in_bytes(self.history[0]);
+                        let pos_2 = self.position_in_bytes(self.history[1]);
+                        self.send_message(vec![0x01, 0x0, pos, pos_2]);
                     }
                 }
             }
@@ -164,6 +228,12 @@ impl event::EventHandler for MainState {
         y: f32,
     ) {
         if button == ggez::input::mouse::MouseButton::Left {
+            if self.mode == GameMode::Listen && self.game.turn() % 2 == 0 {
+                return;
+            }
+            if self.mode == GameMode::Connect && self.game.turn() % 2 != 0 {
+                return;
+            }
             let x = (x / 100.0).floor() as i32;
             let y = 7 - (y / 75.0).floor() as i32;
             self.history.push((y, x));
@@ -182,6 +252,15 @@ impl event::EventHandler for MainState {
             }
             _ => (),
         }
+    }
+
+    fn mouse_button_up_event(
+        &mut self,
+        _ctx: &mut Context,
+        _button: event::MouseButton,
+        _x: f32,
+        _y: f32,
+    ) {
     }
 }
 
